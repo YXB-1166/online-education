@@ -1,0 +1,24 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: edu-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://edu-user
+          predicates:
+            - Path=/user/**
+        - id: course-service
+          uri: lb://edu-course
+          predicates:
+            - Path=/course/**,/selection/**,/forum/**,/assistant/**
+        - id: exam-service
+          uri: lb://edu-exam
+          predicates:
+            - Path=/assignment/**,/submission/**
