@@ -6,6 +6,7 @@ import com.edu.common.page.PageParam;
 import com.edu.common.page.PageResult;
 import com.edu.common.result.Result;
 import com.edu.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +54,15 @@ public class UserController {
     @RequireRole(3)
     public Result<Void> add(@Valid @RequestBody User user) {
         userService.add(user);
+        return Result.ok();
+    }
+
+    @PutMapping("/profile")
+    @RequireRole(2)
+    public Result<Void> updateProfile(HttpServletRequest request, @RequestBody User user) {
+        Long userId = (Long) request.getAttribute("userId");
+        user.setId(userId);
+        userService.updateProfile(user);
         return Result.ok();
     }
 

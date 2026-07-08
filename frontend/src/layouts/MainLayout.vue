@@ -25,6 +25,7 @@
           <el-menu-item index="/teacher/courses">我的课程</el-menu-item>
           <el-menu-item index="/teacher/courses/create">创建课程</el-menu-item>
           <el-menu-item index="/teacher/pending-approvals">选课审核</el-menu-item>
+          <el-menu-item index="/teacher/profile">个人设置</el-menu-item>
         </el-sub-menu>
         <el-sub-menu v-if="store.user?.role === 3" index="/admin">
           <template #title>
@@ -62,6 +63,9 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item v-if="store.user?.role === 2" command="profile">
+                <el-icon><User /></el-icon>个人设置
+              </el-dropdown-item>
               <el-dropdown-item command="logout">
                 <el-icon><SwitchButton /></el-icon>退出登录
               </el-dropdown-item>
@@ -127,6 +131,8 @@ function handleCommand(cmd) {
   if (cmd === 'logout') {
     store.logout()
     router.push('/login')
+  } else if (cmd === 'profile') {
+    router.push('/teacher/profile')
   }
 }
 </script>

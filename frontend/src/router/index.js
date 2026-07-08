@@ -30,6 +30,7 @@ const routes = [
       { path: 'teacher/courses/:id/forum', name: 'TeacherForum', component: () => import('../views/teacher/ForumManage.vue'), meta: { title: '论坛管理' } },
       { path: 'teacher/pending-approvals', name: 'PendingApprovals', component: () => import('../views/teacher/PendingApprovals.vue'), meta: { title: '选课审核' } },
       { path: 'teacher/courses/:id/students', name: 'StudentList', component: () => import('../views/teacher/StudentList.vue'), meta: { title: '学生名单' } },
+      { path: 'teacher/profile', name: 'TeacherProfile', component: () => import('../views/teacher/TeacherProfile.vue'), meta: { title: '个人设置' } },
       { path: 'admin/users', name: 'UserManage', component: () => import('../views/admin/UserManage.vue'), meta: { title: '用户管理' } },
       { path: 'admin/courses', name: 'AdminCourses', component: () => import('../views/admin/CourseManage.vue'), meta: { title: '课程管理' } },
       { path: 'admin/dashboard', name: 'Dashboard', component: () => import('../views/admin/Dashboard.vue'), meta: { title: '数据概览' } }

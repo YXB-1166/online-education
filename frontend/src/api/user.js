@@ -20,6 +20,10 @@ export function updateUser(data) {
   return request({ url: '/user', method: 'put', data })
 }
 
+export function updateProfile(data) {
+  return request({ url: '/user/profile', method: 'put', data })
+}
+
 export function deleteUser(id) {
   return request({ url: `/user/${id}`, method: 'delete' })
 }

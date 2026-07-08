@@ -48,6 +48,14 @@ public class UserService extends BaseService {
         log.info("新增用户: id={}, username={}", user.getId(), user.getUsername());
     }
 
+    public void updateProfile(User user) {
+        if (userMapper.updateProfile(user) == 0) {
+            log.warn("更新个人资料失败: id={}", user.getId());
+            throw new BusinessException("更新个人资料失败");
+        }
+        log.info("更新个人资料: id={}", user.getId());
+    }
+
     public void update(User user) {
         if (userMapper.update(user) == 0) {
             log.warn("更新用户失败: id={}", user.getId());
