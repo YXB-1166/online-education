@@ -42,7 +42,7 @@
           <el-input-number v-model="startForm.examRatio" :min="0" :max="100" /> %
         </el-form-item>
         <el-form-item label="考试时间">
-          <el-date-picker v-model="startForm.examTime" type="datetime" placeholder="选择考试时间" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm" />
+          <el-date-picker v-model="startForm.examTime" type="datetime" placeholder="选择考试时间" format="YYYY-MM-DD HH:mm" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -84,7 +84,7 @@ function openStartDialog(row) {
 function formatDate(d) {
   if (!d) return null
   const dt = new Date(d)
-  if (isNaN(dt.getTime())) return d
+  if (isNaN(dt.getTime())) return null
   const y = dt.getFullYear()
   const m = String(dt.getMonth() + 1).padStart(2, '0')
   const day = String(dt.getDate()).padStart(2, '0')

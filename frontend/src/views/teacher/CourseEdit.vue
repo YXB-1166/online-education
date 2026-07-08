@@ -33,7 +33,7 @@
       <div style="display:flex;flex-direction:column;gap:24px">
         <el-card>
           <template #header><span style="font-weight:600">考试时间</span></template>
-          <el-date-picker v-model="examTime" type="datetime" placeholder="选择考试时间" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm" style="width:100%" />
+          <el-date-picker v-model="examTime" type="datetime" placeholder="选择考试时间" format="YYYY-MM-DD HH:mm" style="width:100%" />
           <div style="margin-top:12px;text-align:right">
             <el-button type="primary" @click="handleSetExamTime" :loading="settingExam" round>更新考试时间</el-button>
           </div>
@@ -85,7 +85,7 @@ onMounted(async () => {
   loading.value = true
   const c = await getCourse(route.params.id)
   Object.assign(form, c)
-  examTime.value = c.examTime || null
+  examTime.value = c.examTime ? new Date(c.examTime) : null
   loading.value = false
   await loadStudents()
 })
@@ -117,7 +117,7 @@ async function handleSubmit() {
 function formatDate(d) {
   if (!d) return null
   const dt = new Date(d)
-  if (isNaN(dt.getTime())) return d
+  if (isNaN(dt.getTime())) return null
   const y = dt.getFullYear()
   const m = String(dt.getMonth() + 1).padStart(2, '0')
   const day = String(dt.getDate()).padStart(2, '0')
