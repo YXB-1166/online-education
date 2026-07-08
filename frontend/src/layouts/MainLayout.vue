@@ -47,6 +47,11 @@
             <el-breadcrumb-item v-if="route.meta?.title">{{ route.meta.title }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
+        <el-badge v-if="store.user?.role === 1" :value="unreadCount" :hidden="unreadCount === 0" class="notif-badge">
+          <el-button text @click="showNotifPanel = !showNotifPanel">
+            <el-icon :size="22"><Bell /></el-icon>
+          </el-button>
+        </el-badge>
         <el-dropdown @command="handleCommand">
           <div class="user-avatar-wrap">
             <el-avatar :size="36" style="background:linear-gradient(135deg,#667eea,#764ba2)">
@@ -73,19 +78,50 @@
       </el-main>
       <AssistantChat v-if="store.user?.role === 1 || store.user?.role === 2" />
     </el-container>
+
+    <el-drawer v-model="showNotifPanel" title="课程通知" :size="380" direction="rtl" v-if="store.user?.role === 1">
+      <div v-if="notifications.length === 0" style="text-align:center;color:#999;padding:40px 0">暂无通知</div>
+      <div v-for="n in notifications" :key="n.id" class="notif-item">
+        <div class="notif-title">{{ n.title }}</div>
+        <div class="notif-content">{{ n.content }}</div>
+        <div class="notif-time">{{ n.createTime }}</div>
+      </div>
+    </el-drawer>
   </el-container>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import AssistantChat from '../components/AssistantChat.vue'
+import { getNotifications } from '../api/course'
 
 const route = useRoute()
 const router = useRouter()
 const store = useUserStore()
 const isCollapse = ref(false)
+const showNotifPanel = ref(false)
+const notifications = ref([])
+
+const unreadCount = computed(() => notifications.value.length)
+
+let notifTimer = null
+
+onMounted(async () => {
+  if (store.user?.role === 1) {
+    await loadNotifications()
+    notifTimer = setInterval(loadNotifications, 30000)
+  }
+})
+
+onUnmounted(() => { if (notifTimer) clearInterval(notifTimer) })
+
+async function loadNotifications() {
+  try {
+    notifications.value = await getNotifications(store.user.id)
+  } catch (_) {}
+}
 
 function handleCommand(cmd) {
   if (cmd === 'logout') {
@@ -214,5 +250,26 @@ function handleCommand(cmd) {
   background: #f0f2f5;
   min-height: calc(100vh - 64px);
   padding: 24px;
+}
+.notif-badge { margin-right: 8px; }
+.notif-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.notif-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+.notif-content {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+.notif-time {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 6px;
 }
 </style>

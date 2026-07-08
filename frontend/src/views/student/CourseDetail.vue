@@ -13,6 +13,10 @@
           </div>
         </div>
         <el-divider style="margin:12px 0" />
+        <div style="display:flex;gap:32px;margin-bottom:12px;flex-wrap:wrap">
+          <div><span style="color:#64748b">成绩占比：</span>作业 {{ course.homeworkRatio || '-' }}% / 考试 {{ course.examRatio || '-' }}%</div>
+          <div><span style="color:#64748b">考试时间：</span>{{ course.examTime ? course.examTime.replace('T', ' ') : '待定' }}</div>
+        </div>
         <p style="color:#475569;line-height:1.8;margin:0">{{ course.description || '暂无课程介绍' }}</p>
       </el-card>
 

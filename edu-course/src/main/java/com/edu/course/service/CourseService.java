@@ -2,12 +2,14 @@ package com.edu.course.service;
 
 import com.edu.common.entity.Course;
 import com.edu.common.entity.CourseSelection;
+import com.edu.common.entity.Notification;
 import com.edu.common.page.PageParam;
 import com.edu.common.page.PageResult;
 import com.edu.common.result.BusinessException;
 import com.edu.common.service.BaseService;
 import com.edu.course.mapper.CourseMapper;
 import com.edu.course.mapper.CourseSelectionMapper;
+import com.edu.course.mapper.NotificationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,9 @@ public class CourseService extends BaseService {
 
     @Autowired
     private CourseSelectionMapper selectionMapper;
+
+    @Autowired
+    private NotificationMapper notificationMapper;
 
     public Course findById(Long id) {
         Course course = courseMapper.selectById(id);
@@ -41,6 +46,16 @@ public class CourseService extends BaseService {
         long total = courseMapper.countList(course);
         List<Course> list = courseMapper.selectPage(course, param.getOffset(), param.getPageSize());
         log.info("课程分页: total={}, page={}/{}", total, param.getPageNum(), param.getPageSize());
+        return new PageResult<>(list, total, param.getPageNum(), param.getPageSize());
+    }
+
+    public List<Course> findListExcludingStudent(Course course, Long studentId) {
+        return courseMapper.selectListExcludingStudent(course, studentId);
+    }
+
+    public PageResult<Course> pageExcludingStudent(PageParam param, Course course, Long studentId) {
+        long total = courseMapper.countListExcludingStudent(course, studentId);
+        List<Course> list = courseMapper.selectPageExcludingStudent(course, studentId, param.getOffset(), param.getPageSize());
         return new PageResult<>(list, total, param.getPageNum(), param.getPageSize());
     }
 
@@ -149,6 +164,66 @@ public class CourseService extends BaseService {
 
     public List<Course> listByTeacher(Long teacherId) {
         return courseMapper.selectByTeacher(teacherId);
+    }
+
+    @Transactional
+    public void startCourse(Long id, Integer homeworkRatio, Integer examRatio, LocalDateTime examTime) {
+        Course course = courseMapper.selectById(id);
+        if (course == null) throw new BusinessException("课程不存在");
+        if (!"1".equals(course.getStatus())) throw new BusinessException("只有即将开课的课程才能开课");
+        int n = courseMapper.startCourse(id, homeworkRatio, examRatio, examTime);
+        if (n == 0) throw new BusinessException("开课失败");
+        // 发送开课通知
+        Notification notif = new Notification();
+        notif.setCourseId(id);
+        notif.setTitle("课程已开课：" + course.getCourseName());
+        notif.setContent("课程《" + course.getCourseName() + "》已正式开课！平时作业占比 " + homeworkRatio + "%，考试占比 " + examRatio + "%。");
+        notificationMapper.insert(notif);
+        if (examTime != null) {
+            Notification examNotif = new Notification();
+            examNotif.setCourseId(id);
+            examNotif.setTitle("考试时间已定：" + course.getCourseName());
+            examNotif.setContent("课程《" + course.getCourseName() + "》考试时间定为 " + examTime + "，请同学们做好准备。");
+            notificationMapper.insert(examNotif);
+        }
+        log.info("开课成功: id={}, ratio={}/{}, examTime={}", id, homeworkRatio, examRatio, examTime);
+    }
+
+    @Transactional
+    public void endCourse(Long id) {
+        Course course = courseMapper.selectById(id);
+        if (course == null) throw new BusinessException("课程不存在");
+        if (!"2".equals(course.getStatus())) throw new BusinessException("只有授课中的课程才能结课");
+        int n = courseMapper.endCourse(id);
+        if (n == 0) throw new BusinessException("结课失败");
+        Notification notif = new Notification();
+        notif.setCourseId(id);
+        notif.setTitle("课程已结课：" + course.getCourseName());
+        notif.setContent("课程《" + course.getCourseName() + "》已结课，成绩将陆续公布。");
+        notificationMapper.insert(notif);
+        log.info("结课成功: id={}", id);
+    }
+
+    @Transactional
+    public void setExamTime(Long id, LocalDateTime examTime) {
+        Course course = courseMapper.selectById(id);
+        if (course == null) throw new BusinessException("课程不存在");
+        courseMapper.updateExamTime(id, examTime);
+        Notification notif = new Notification();
+        notif.setCourseId(id);
+        String t = examTime != null ? examTime.toString() : "待定";
+        notif.setTitle("考试时间更新：" + course.getCourseName());
+        notif.setContent("课程《" + course.getCourseName() + "》考试时间已更新为 " + t + "。");
+        notificationMapper.insert(notif);
+        log.info("考试时间更新: id={}, examTime={}", id, examTime);
+    }
+
+    public List<Notification> getNotifications(Long studentId) {
+        return notificationMapper.selectByStudent(studentId);
+    }
+
+    public List<Notification> getCourseNotifications(Long courseId) {
+        return notificationMapper.selectByCourse(courseId);
     }
 
     @Transactional

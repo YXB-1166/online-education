@@ -25,6 +25,9 @@ public class Course implements Serializable {
 
     private Integer       enrolledCount;
     private String        status;
+    private Integer       homeworkRatio;
+    private Integer       examRatio;
+    private LocalDateTime examTime;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime createTime;
@@ -50,6 +53,12 @@ public class Course implements Serializable {
     public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+    public Integer getHomeworkRatio() { return homeworkRatio; }
+    public void setHomeworkRatio(Integer homeworkRatio) { this.homeworkRatio = homeworkRatio; }
+    public Integer getExamRatio() { return examRatio; }
+    public void setExamRatio(Integer examRatio) { this.examRatio = examRatio; }
+    public LocalDateTime getExamTime() { return examTime; }
+    public void setExamTime(LocalDateTime examTime) { this.examTime = examTime; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }

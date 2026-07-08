@@ -76,7 +76,7 @@ function handleSearch() {
 }
 
 async function fetchData() {
-  const params = { pageNum: pageNum.value, pageSize }
+  const params = { pageNum: pageNum.value, pageSize, excludeStudentId: store.user?.role === 1 ? store.user.id : undefined }
   if (keyword.value.trim()) params.courseName = keyword.value.trim()
   const res = await coursePage(params)
   list.value = res.list

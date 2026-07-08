@@ -4,6 +4,7 @@ import com.edu.common.annotation.RequireRole;
 import com.edu.common.entity.Chapter;
 import com.edu.common.entity.Course;
 import com.edu.common.entity.CourseSelection;
+import com.edu.common.entity.Notification;
 import com.edu.common.page.PageParam;
 import com.edu.common.page.PageResult;
 import com.edu.common.result.Result;
@@ -11,8 +12,10 @@ import com.edu.course.service.ChapterService;
 import com.edu.course.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -33,13 +36,19 @@ public class CourseController {
 
     @GetMapping("/list")
     @RequireRole({1, 2, 3})
-    public Result<List<Course>> list(Course course) {
+    public Result<List<Course>> list(Course course, @RequestParam(required = false) Long excludeStudentId) {
+        if (excludeStudentId != null) {
+            return Result.ok(courseService.findListExcludingStudent(course, excludeStudentId));
+        }
         return Result.ok(courseService.findList(course));
     }
 
     @GetMapping("/page")
     @RequireRole({1, 2, 3})
-    public Result<PageResult<Course>> page(PageParam param, Course course) {
+    public Result<PageResult<Course>> page(PageParam param, Course course, @RequestParam(required = false) Long excludeStudentId) {
+        if (excludeStudentId != null) {
+            return Result.ok(courseService.pageExcludingStudent(param, course, excludeStudentId));
+        }
         return Result.ok(courseService.page(param, course));
     }
 
@@ -140,6 +149,43 @@ public class CourseController {
     public Result<Void> rejectCourse(@PathVariable Long id) {
         courseService.rejectCourse(id);
         return Result.ok();
+    }
+
+    @PutMapping("/{id}/start")
+    @RequireRole(2)
+    public Result<Void> startCourse(@PathVariable Long id,
+                                    @RequestParam Integer homeworkRatio,
+                                    @RequestParam Integer examRatio,
+                                    @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime examTime) {
+        courseService.startCourse(id, homeworkRatio, examRatio, examTime);
+        return Result.ok();
+    }
+
+    @PutMapping("/{id}/end")
+    @RequireRole(2)
+    public Result<Void> endCourse(@PathVariable Long id) {
+        courseService.endCourse(id);
+        return Result.ok();
+    }
+
+    @PutMapping("/{id}/exam-time")
+    @RequireRole(2)
+    public Result<Void> setExamTime(@PathVariable Long id,
+                                    @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime examTime) {
+        courseService.setExamTime(id, examTime);
+        return Result.ok();
+    }
+
+    @GetMapping("/notifications")
+    @RequireRole(1)
+    public Result<List<Notification>> notifications(@RequestParam Long studentId) {
+        return Result.ok(courseService.getNotifications(studentId));
+    }
+
+    @GetMapping("/{courseId}/notifications")
+    @RequireRole({1, 2, 3})
+    public Result<List<Notification>> courseNotifications(@PathVariable Long courseId) {
+        return Result.ok(courseService.getCourseNotifications(courseId));
     }
 
     @GetMapping("/selection/list")

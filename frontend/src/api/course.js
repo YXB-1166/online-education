@@ -107,3 +107,23 @@ export function approveCourse(id) {
 export function rejectCourse(id) {
   return request({ url: `/course/reject/${id}`, method: 'put' })
 }
+
+export function startCourse(id, homeworkRatio, examRatio, examTime) {
+  return request({ url: `/course/${id}/start`, method: 'put', params: { homeworkRatio, examRatio, examTime } })
+}
+
+export function endCourse(id) {
+  return request({ url: `/course/${id}/end`, method: 'put' })
+}
+
+export function setExamTime(id, examTime) {
+  return request({ url: `/course/${id}/exam-time`, method: 'put', params: { examTime } })
+}
+
+export function getNotifications(studentId) {
+  return request({ url: '/course/notifications', method: 'get', params: { studentId } })
+}
+
+export function getCourseNotifications(courseId) {
+  return request({ url: `/course/${courseId}/notifications`, method: 'get' })
+}

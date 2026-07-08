@@ -3,6 +3,7 @@ package com.edu.course.mapper;
 import com.edu.common.entity.Course;
 import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -32,15 +33,51 @@ public interface CourseMapper {
             " order by id limit #{offset}, #{size}</script>")
     List<Course> selectPage(@Param("c") Course course, @Param("offset") int offset, @Param("size") int size);
 
-    @Insert("insert into tb_course(course_name, description, teacher_id, credit, max_students, status, start_time, end_time) " +
-            "values(#{courseName}, #{description}, #{teacherId}, #{credit}, #{maxStudents}, #{status}, #{startTime}, #{endTime})")
+    @Select("<script>select * from tb_course where status != '0' and status != '4'" +
+            "<if test='c.courseName != null'> and (course_name like concat('%',#{c.courseName},'%') or description like concat('%',#{c.courseName},'%'))</if>" +
+            "<if test='c.teacherId != null'> and teacher_id = #{c.teacherId}</if>" +
+            "<if test='c.status != null'> and status = #{c.status}</if>" +
+            " and id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
+            " order by id</script>")
+    List<Course> selectListExcludingStudent(@Param("c") Course course, @Param("studentId") Long studentId);
+
+    @Select("<script>select count(*) from tb_course where status != '0' and status != '4'" +
+            "<if test='c.courseName != null'> and (course_name like concat('%',#{c.courseName},'%') or description like concat('%',#{c.courseName},'%'))</if>" +
+            "<if test='c.teacherId != null'> and teacher_id = #{c.teacherId}</if>" +
+            "<if test='c.status != null'> and status = #{c.status}</if>" +
+            " and id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
+            "</script>")
+    long countListExcludingStudent(@Param("c") Course course, @Param("studentId") Long studentId);
+
+    @Select("<script>select * from tb_course where status != '0' and status != '4'" +
+            "<if test='c.courseName != null'> and (course_name like concat('%',#{c.courseName},'%') or description like concat('%',#{c.courseName},'%'))</if>" +
+            "<if test='c.teacherId != null'> and teacher_id = #{c.teacherId}</if>" +
+            "<if test='c.status != null'> and status = #{c.status}</if>" +
+            " and id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
+            " order by id limit #{offset}, #{size}</script>")
+    List<Course> selectPageExcludingStudent(@Param("c") Course course, @Param("studentId") Long studentId,
+                                            @Param("offset") int offset, @Param("size") int size);
+
+    @Insert("insert into tb_course(course_name, description, teacher_id, credit, max_students, status, homework_ratio, exam_ratio, exam_time, start_time, end_time) " +
+            "values(#{courseName}, #{description}, #{teacherId}, #{credit}, #{maxStudents}, #{status}, #{homeworkRatio}, #{examRatio}, #{examTime}, #{startTime}, #{endTime})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Course course);
 
     @Update("update tb_course set course_name=#{courseName}, description=#{description}, teacher_id=#{teacherId}, " +
-            "credit=#{credit}, max_students=#{maxStudents}, status=#{status}, start_time=#{startTime}, " +
-            "end_time=#{endTime} where id=#{id}")
+            "credit=#{credit}, max_students=#{maxStudents}, status=#{status}, homework_ratio=#{homeworkRatio}, " +
+            "exam_ratio=#{examRatio}, exam_time=#{examTime}, start_time=#{startTime}, end_time=#{endTime} where id=#{id}")
     int update(Course course);
+
+    @Update("update tb_course set status='2', homework_ratio=#{homeworkRatio}, exam_ratio=#{examRatio}, " +
+            "exam_time=#{examTime} where id=#{id} and status='1'")
+    int startCourse(@Param("id") Long id, @Param("homeworkRatio") Integer homeworkRatio,
+                    @Param("examRatio") Integer examRatio, @Param("examTime") LocalDateTime examTime);
+
+    @Update("update tb_course set status='3' where id=#{id} and status='2'")
+    int endCourse(@Param("id") Long id);
+
+    @Update("update tb_course set exam_time=#{examTime} where id=#{id}")
+    int updateExamTime(@Param("id") Long id, @Param("examTime") LocalDateTime examTime);
 
     @Delete("delete from tb_course where id=#{id}")
     int deleteById(@Param("id") Long id);

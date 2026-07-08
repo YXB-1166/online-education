@@ -30,12 +30,34 @@ CREATE TABLE tb_course (
     credit          INT          DEFAULT 0 COMMENT '学分',
     max_students    INT          DEFAULT 100 COMMENT '最大选课人数',
     enrolled_count  INT          DEFAULT 0 COMMENT '已选人数',
-    status          VARCHAR(2)   DEFAULT '1' COMMENT '1-即将开课 2-授课中 3-已结课',
+    status          VARCHAR(2)   DEFAULT '1' COMMENT '0-待审核 1-即将开课 2-授课中 3-已结课 4-审核不通过',
+    homework_ratio  INT          DEFAULT 50 COMMENT '平时作业占比%',
+    exam_ratio      INT          DEFAULT 50 COMMENT '期末考试占比%',
+    exam_time       DATETIME     DEFAULT NULL COMMENT '考试时间',
     start_time      DATETIME     DEFAULT NULL COMMENT '开课时间',
     end_time        DATETIME     DEFAULT NULL COMMENT '结课时间',
     create_time     DATETIME     DEFAULT CURRENT_TIMESTAMP,
     update_time     DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程表';
+
+-- 通知表
+DROP TABLE IF EXISTS tb_notification;
+CREATE TABLE tb_notification (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '通知ID',
+    course_id   BIGINT       NOT NULL COMMENT '所属课程ID',
+    title       VARCHAR(200) NOT NULL COMMENT '通知标题',
+    content     TEXT         DEFAULT NULL COMMENT '通知内容',
+    create_time DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知表';
+
+-- 通知已读记录表
+DROP TABLE IF EXISTS tb_notification_read;
+CREATE TABLE tb_notification_read (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '已读记录ID',
+    notification_id BIGINT NOT NULL COMMENT '通知ID',
+    student_id      BIGINT NOT NULL COMMENT '学生ID',
+    read_time       DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '已读时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知已读记录表';
 
 -- 选课记录表
 DROP TABLE IF EXISTS tb_course_selection;
@@ -130,10 +152,10 @@ INSERT INTO tb_user(username, password, real_name, role, status) VALUES
 ('zhaosi',   '123456', '赵四', 1, 1);
 
 -- 课程
-INSERT INTO tb_course(course_name, description, teacher_id, credit, max_students, status, start_time, end_time) VALUES
-('Java程序设计',   'Java基础与面向对象编程',     2, 4, 100, '2', '2026-03-01', '2026-07-01'),
-('数据结构',       '常见数据结构与算法',           2, 3, 80,  '2', '2026-03-01', '2026-07-01'),
-('数据库原理',     '关系数据库与SQL语言',          2, 3, 80,  '1', '2026-09-01', '2027-01-01');
+INSERT INTO tb_course(course_name, description, teacher_id, credit, max_students, status, homework_ratio, exam_ratio, exam_time, start_time, end_time) VALUES
+('Java程序设计',   'Java基础与面向对象编程',     2, 4, 100, '2', 40, 60, '2026-06-20 14:00:00', '2026-03-01', '2026-07-01'),
+('数据结构',       '常见数据结构与算法',           2, 3, 80,  '2', 50, 50, '2026-06-25 14:00:00', '2026-03-01', '2026-07-01'),
+('数据库原理',     '关系数据库与SQL语言',          2, 3, 80,  '1', 50, 50, NULL,                '2026-09-01', '2027-01-01');
 
 -- 选课
 INSERT INTO tb_course_selection(student_id, course_id, status) VALUES
