@@ -2,23 +2,39 @@
   <div>
     <div class="page-title">{{ course?.courseName || '课程详情' }}</div>
     <div v-loading="loading">
-      <el-card v-if="course" style="margin-bottom:24px">
-        <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px">
-          <div class="course-icon-lg">{{ course.courseName.charAt(0) }}</div>
-          <div>
-            <div style="font-size:20px;font-weight:700">{{ course.courseName }}</div>
-            <div style="color:#64748b;font-size:14px;margin-top:4px">
-              授课教师：{{ teacherName }} ｜ 容量：{{ course.enrolledCount }}/{{ course.maxStudents }}
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px;align-items:start">
+        <el-card v-if="course">
+          <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px">
+            <div class="course-icon-lg">{{ course.courseName.charAt(0) }}</div>
+            <div>
+              <div style="font-size:20px;font-weight:700">{{ course.courseName }}</div>
+              <div style="color:#64748b;font-size:14px;margin-top:4px">
+                授课教师：{{ teacher?.realName || '未知' }} ｜ 容量：{{ course.enrolledCount }}/{{ course.maxStudents }}
+              </div>
             </div>
           </div>
-        </div>
-        <el-divider style="margin:12px 0" />
-        <div style="display:flex;gap:32px;margin-bottom:12px;flex-wrap:wrap">
-          <div><span style="color:#64748b">成绩占比：</span>作业 {{ course.homeworkRatio || '-' }}% / 考试 {{ course.examRatio || '-' }}%</div>
-          <div><span style="color:#64748b">考试时间：</span>{{ course.examTime ? course.examTime.replace('T', ' ') : '待定' }}</div>
-        </div>
-        <p style="color:#475569;line-height:1.8;margin:0">{{ course.description || '暂无课程介绍' }}</p>
-      </el-card>
+          <el-divider style="margin:12px 0" />
+          <div style="display:flex;gap:32px;margin-bottom:12px;flex-wrap:wrap">
+            <div><span style="color:#64748b">成绩占比：</span>作业 {{ course.homeworkRatio || '-' }}% / 考试 {{ course.examRatio || '-' }}%</div>
+            <div><span style="color:#64748b">考试时间：</span>{{ course.examTime ? course.examTime.replace('T', ' ') : '待定' }}</div>
+          </div>
+          <p style="color:#475569;line-height:1.8;margin:0">{{ course.description || '暂无课程介绍' }}</p>
+        </el-card>
+
+        <el-card v-if="teacher">
+          <template #header><span style="font-weight:600">授课教师</span></template>
+          <div style="text-align:center;padding:8px 0">
+            <div class="teacher-avatar">{{ teacher.realName?.charAt(0) || '?' }}</div>
+            <div style="font-size:18px;font-weight:700;margin-top:8px">{{ teacher.realName }}</div>
+            <div style="color:#667eea;font-size:14px;margin-top:4px">{{ teacher.title || '教师' }}</div>
+            <el-divider style="margin:16px 0" />
+            <div style="text-align:left;font-size:14px;color:#475569;line-height:2">
+              <div><span style="color:#94a3b8">邮箱：</span>{{ teacher.email || '未设置' }}</div>
+              <div><span style="color:#94a3b8">电话：</span>{{ teacher.phone || '未设置' }}</div>
+            </div>
+          </div>
+        </el-card>
+      </div>
 
       <el-card style="margin-bottom:24px">
         <template #header>
@@ -74,20 +90,25 @@ const route = useRoute()
 const course = ref(null)
 const assignments = ref([])
 const loading = ref(false)
-const teacherName = ref('')
+const teacher = ref(null)
 
 onMounted(async () => {
   loading.value = true
   course.value = await getCourse(route.params.id)
   assignments.value = await listAssignments({ courseId: route.params.id })
   const users = await listUsers()
-  const teacher = users.find(u => u.id === course.value.teacherId)
-  teacherName.value = teacher ? teacher.realName : '未知'
+  teacher.value = users.find(u => u.id === course.value.teacherId) || null
   loading.value = false
 })
 </script>
 
 <style scoped>
+.teacher-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700;
+}
 .course-icon-lg {
   width: 64px;
   height: 64px;

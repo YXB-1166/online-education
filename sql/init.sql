@@ -15,6 +15,7 @@ CREATE TABLE tb_user (
     role        TINYINT      NOT NULL DEFAULT 1 COMMENT '1-学生 2-教师 3-管理员',
     email       VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
     phone       VARCHAR(20)  DEFAULT NULL COMMENT '手机号',
+    title       VARCHAR(50)  DEFAULT NULL COMMENT '职称 如教授/副教授/讲师',
     status      TINYINT      NOT NULL DEFAULT 1 COMMENT '0-禁用 1-启用',
     create_time DATETIME     DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -168,11 +169,11 @@ CREATE TABLE tb_knowledge_point (
 -- ==================== 测试数据 ====================
 
 -- 用户（密码均为 123456）
-INSERT INTO tb_user(username, password, real_name, role, status) VALUES
-('zhangsan', '123456', '张三', 1, 1),
-('lisi',     '123456', '李四', 2, 1),
-('wangwu',   '123456', '王五', 3, 1),
-('zhaosi',   '123456', '赵四', 1, 1);
+INSERT INTO tb_user(username, password, real_name, role, email, phone, title, status) VALUES
+('zhangsan', '123456', '张三', 1, NULL, NULL, NULL, 1),
+('lisi',     '123456', '李四', 2, 'lisi@edu.cn', '13800138000', '教授', 1),
+('wangwu',   '123456', '王五', 3, NULL, NULL, NULL, 1),
+('zhaosi',   '123456', '赵四', 1, NULL, NULL, NULL, 1);
 
 -- 课程
 INSERT INTO tb_course(course_name, description, teacher_id, credit, max_students, status, homework_ratio, exam_ratio, exam_time, start_time, end_time) VALUES

@@ -35,13 +35,13 @@ public interface UserMapper {
             " order by id limit #{offset}, #{size}</script>")
     List<User> selectPage(@Param("u") User user, @Param("offset") int offset, @Param("size") int size);
 
-    @Insert("insert into tb_user(username, password, real_name, role, email, phone, status) " +
-            "values(#{username}, #{password}, #{realName}, #{role}, #{email}, #{phone}, #{status})")
+    @Insert("insert into tb_user(username, password, real_name, role, email, phone, title, status) " +
+            "values(#{username}, #{password}, #{realName}, #{role}, #{email}, #{phone}, #{title}, #{status})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(User user);
 
     @Update("update tb_user set username=#{username}, real_name=#{realName}, role=#{role}, " +
-            "email=#{email}, phone=#{phone}, status=#{status} where id=#{id}")
+            "email=#{email}, phone=#{phone}, title=#{title}, status=#{status} where id=#{id}")
     int update(User user);
 
     @Delete("delete from tb_user where id=#{id}")

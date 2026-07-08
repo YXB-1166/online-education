@@ -23,6 +23,7 @@ public class User implements Serializable {
 
     private String        email;
     private String        phone;
+    private String        title;
     private Integer       status = 1;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
@@ -41,6 +42,8 @@ public class User implements Serializable {
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public LocalDateTime getCreateTime() { return createTime; }
