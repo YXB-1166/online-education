@@ -81,13 +81,26 @@ function openStartDialog(row) {
   startDialogVisible.value = true
 }
 
+function formatDate(d) {
+  if (!d) return null
+  const dt = new Date(d)
+  if (isNaN(dt.getTime())) return d
+  const y = dt.getFullYear()
+  const m = String(dt.getMonth() + 1).padStart(2, '0')
+  const day = String(dt.getDate()).padStart(2, '0')
+  const h = String(dt.getHours()).padStart(2, '0')
+  const mi = String(dt.getMinutes()).padStart(2, '0')
+  const s = String(dt.getSeconds()).padStart(2, '0')
+  return `${y}-${m}-${day} ${h}:${mi}:${s}`
+}
+
 async function handleStart() {
   if (startForm.value.homeworkRatio + startForm.value.examRatio !== 100) {
     ElMessage.warning('作业占比 + 考试占比必须等于 100%')
     return
   }
   starting.value = true
-  await startCourse(currentCourseId.value, startForm.value.homeworkRatio, startForm.value.examRatio, startForm.value.examTime || null)
+  await startCourse(currentCourseId.value, startForm.value.homeworkRatio, startForm.value.examRatio, formatDate(startForm.value.examTime))
   ElMessage.success('开课成功，通知已推送给学生')
   startDialogVisible.value = false
   courses.value = await myTeaching(store.user.id)

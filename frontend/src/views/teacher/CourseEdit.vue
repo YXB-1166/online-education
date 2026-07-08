@@ -114,9 +114,22 @@ async function handleSubmit() {
   router.push('/teacher/courses')
 }
 
+function formatDate(d) {
+  if (!d) return null
+  const dt = new Date(d)
+  if (isNaN(dt.getTime())) return d
+  const y = dt.getFullYear()
+  const m = String(dt.getMonth() + 1).padStart(2, '0')
+  const day = String(dt.getDate()).padStart(2, '0')
+  const h = String(dt.getHours()).padStart(2, '0')
+  const mi = String(dt.getMinutes()).padStart(2, '0')
+  const s = String(dt.getSeconds()).padStart(2, '0')
+  return `${y}-${m}-${day} ${h}:${mi}:${s}`
+}
+
 async function handleSetExamTime() {
   settingExam.value = true
-  await setExamTime(route.params.id, examTime.value || null)
+  await setExamTime(route.params.id, formatDate(examTime.value))
   ElMessage.success('考试时间已更新，通知已推送给学生')
   settingExam.value = false
 }
