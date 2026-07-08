@@ -26,7 +26,7 @@
             <el-button v-if="row.status === '1'" size="small" type="success" @click="openStartDialog(row)" round>开课</el-button>
             <el-button v-if="row.status === '2'" size="small" type="warning" @click="handleEnd(row)" round>结课</el-button>
             <el-button size="small" @click="$router.push('/teacher/courses/' + row.id + '/edit')" round>编辑</el-button>
-            <el-button size="small" type="primary" @click="$router.push('/teacher/courses/' + row.id + '/assignments')" round>作业管理</el-button>
+            <el-button size="small" type="primary" @click="$router.push('/teacher/courses/' + row.id + '/assignments')" round>作业与资料</el-button>
             <el-button size="small" @click="$router.push('/teacher/courses/' + row.id + '/forum')" round>论坛</el-button>
           </template>
         </el-table-column>

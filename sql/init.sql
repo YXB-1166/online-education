@@ -59,6 +59,29 @@ CREATE TABLE tb_notification_read (
     read_time       DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '已读时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知已读记录表';
 
+-- 课程资料表
+DROP TABLE IF EXISTS tb_material;
+CREATE TABLE tb_material (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '资料ID',
+    course_id       BIGINT       NOT NULL COMMENT '所属课程ID',
+    teacher_id      BIGINT       NOT NULL COMMENT '发布教师ID',
+    title           VARCHAR(200) NOT NULL COMMENT '资料标题',
+    content         TEXT         DEFAULT NULL COMMENT '资料内容',
+    required_seconds INT         DEFAULT 60 COMMENT '最低阅读时长(秒)',
+    create_time     DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程资料表';
+
+-- 资料已读记录表
+DROP TABLE IF EXISTS tb_material_read;
+CREATE TABLE tb_material_read (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '记录ID',
+    material_id     BIGINT NOT NULL COMMENT '资料ID',
+    student_id      BIGINT NOT NULL COMMENT '学生ID',
+    read_time       DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '开始阅读时间',
+    completed       TINYINT  DEFAULT 0 COMMENT '0-未完成 1-已完成',
+    completed_time  DATETIME DEFAULT NULL COMMENT '完成阅读时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资料已读记录表';
+
 -- 选课记录表
 DROP TABLE IF EXISTS tb_course_selection;
 CREATE TABLE tb_course_selection (
@@ -256,6 +279,30 @@ INSERT INTO tb_forum_reply(post_id, user_id, content) VALUES
 (1, 2, '封装是隐藏内部实现细节，继承是子类获取父类的属性和方法。'),
 (1, 4, '补充一下：封装通过private实现，继承通过extends实现。'),
 (3, 2, '前序：根左右；中序：左根右；后序：左右根。递归实现很简单。');
+
+-- 通知（模拟教师开课、设置考试时间时自动生成的通知）
+INSERT INTO tb_notification(course_id, title, content, create_time) VALUES
+(1, '课程开课通知', '课程【Java程序设计】已开课，请同学们按时参加学习。', '2026-03-01 08:00:00'),
+(1, '考试时间通知', '课程【Java程序设计】考试时间已确定为 2026-06-20 14:00。', '2026-06-01 10:00:00'),
+(2, '课程开课通知', '课程【数据结构】已开课，请同学们按时参加学习。', '2026-03-01 08:00:00'),
+(2, '考试时间通知', '课程【数据结构】考试时间已确定为 2026-06-25 14:00。', '2026-06-01 10:00:00');
+
+-- 通知已读记录
+INSERT INTO tb_notification_read(notification_id, student_id, read_time) VALUES
+(1, 1, '2026-03-01 08:30:00'),
+(2, 1, '2026-06-01 10:30:00'),
+(3, 1, '2026-03-01 08:30:00'),
+(4, 1, '2026-06-01 10:30:00');
+
+-- 课程资料样例
+INSERT INTO tb_material(course_id, teacher_id, title, content, required_seconds) VALUES
+(1, 2, 'Java第一章讲义', 'Java是一种面向对象的编程语言，由Sun Microsystems公司于1995年推出。\n\n特点：\n1. 跨平台性\n2. 面向对象\n3. 安全性\n4. 多线程\n\n基本数据类型包括：int、double、boolean、char等。', 120),
+(1, 2, 'Java第二章讲义', '面向对象编程三大特征：封装、继承、多态。\n\n封装：将数据和行为包装在一起，对外隐藏实现细节。\n继承：子类继承父类的属性和方法，实现代码复用。\n多态：同一方法在不同对象上有不同表现。', 180);
+
+-- 资料已读记录
+INSERT INTO tb_material_read(material_id, student_id, read_time, completed, completed_time) VALUES
+(1, 1, '2026-04-01 10:00:00', 1, '2026-04-01 10:02:30'),
+(2, 1, '2026-04-05 14:00:00', 0, NULL);
 
 -- 同步已选人数
 UPDATE tb_course SET enrolled_count = (SELECT COUNT(*) FROM tb_course_selection WHERE course_id = tb_course.id AND status = '1');

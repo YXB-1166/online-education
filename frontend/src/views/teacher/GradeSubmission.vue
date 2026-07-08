@@ -14,13 +14,13 @@
             <el-tag v-else type="info" round>待批改</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="320">
+        <el-table-column label="操作" width="360">
           <template #default="{ row }">
-            <div v-if="row.score == null" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <el-input-number v-model="row._score" :min="0" :max="100" size="small" style="width:100px" />
               <el-input v-model="row._comment" placeholder="评语" size="small" style="width:120px" />
               <el-button size="small" :loading="generating === row.id" @click="handleAutoComment(row)" round>🤖 自动评语</el-button>
-              <el-button size="small" type="primary" @click="handleGrade(row)" round>打分</el-button>
+              <el-button size="small" :type="row.score == null ? 'primary' : 'warning'" @click="handleGrade(row)" round>{{ row.score == null ? '打分' : '重新打分' }}</el-button>
             </div>
           </template>
         </el-table-column>
@@ -64,7 +64,7 @@ onMounted(async () => {
 async function fetchData() {
   loading.value = true
   const res = await submissionPage({ assignmentId: route.params.aid, pageNum: pageNum.value, pageSize })
-  submissions.value = res.list.map(s => ({ ...s, _score: 60, _comment: '' }))
+  submissions.value = res.list.map(s => ({ ...s, _score: s.score ?? 60, _comment: s.comment ?? '' }))
   total.value = res.total
   loading.value = false
 }

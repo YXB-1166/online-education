@@ -18,6 +18,10 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
 springdoc:
   api-docs:
     path: /v3/api-docs
