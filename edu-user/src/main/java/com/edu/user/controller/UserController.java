@@ -58,7 +58,7 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    @RequireRole(2)
+    @RequireRole({1, 2})
     public Result<Void> updateProfile(HttpServletRequest request, @RequestBody User user) {
         Long userId = (Long) request.getAttribute("userId");
         user.setId(userId);

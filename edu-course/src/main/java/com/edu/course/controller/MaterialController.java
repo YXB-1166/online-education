@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("course/material")
@@ -21,6 +22,12 @@ public class MaterialController {
     @RequireRole({1, 2, 3})
     public Result<List<Material>> list(@PathVariable Long courseId) {
         return Result.ok(materialService.listByCourse(courseId));
+    }
+
+    @GetMapping("/list-with-status/{courseId}")
+    @RequireRole({1, 2, 3})
+    public Result<List<Map<String, Object>>> listWithStatus(@PathVariable Long courseId, @RequestParam Long studentId) {
+        return Result.ok(materialService.listByCourseWithStatus(courseId, studentId));
     }
 
     @GetMapping("/{id}")

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class MaterialService extends BaseService {
@@ -27,6 +28,10 @@ public class MaterialService extends BaseService {
         return m;
     }
 
+    public List<Map<String, Object>> listByCourseWithStatus(Long courseId, Long studentId) {
+        return materialMapper.selectByCourseWithStatus(courseId, studentId);
+    }
+
     public void add(Material material) {
         if (material.getRequiredSeconds() == null || material.getRequiredSeconds() < 1) {
             material.setRequiredSeconds(60);
@@ -41,9 +46,11 @@ public class MaterialService extends BaseService {
     }
 
     public MaterialReadRecord startReading(Long materialId, Long studentId) {
-        int cnt = materialMapper.countRead(materialId, studentId);
-        if (cnt == 0) {
+        MaterialReadRecord record = materialMapper.selectReadRecord(materialId, studentId);
+        if (record == null) {
             materialMapper.insertRead(materialId, studentId);
+        } else if (record.getCompleted() == 0) {
+            materialMapper.resetReadTime(materialId, studentId);
         }
         return materialMapper.selectReadRecord(materialId, studentId);
     }

@@ -3,8 +3,13 @@
     <div class="page-title">课程资料 - {{ course?.courseName || '' }}</div>
     <div style="display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start">
       <el-card>
-        <template #header><span style="font-weight:600">资料列表</span></template>
-        <div v-for="m in materials" :key="m.id"
+        <template #header>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-weight:600">资料列表</span>
+            <el-switch v-model="showUnfinishedOnly" active-text="仅显示未完成" size="small" />
+          </div>
+        </template>
+        <div v-for="m in filteredMaterials" :key="m.id"
           class="material-item"
           :class="{ active: currentMaterial?.id === m.id }"
           @click="selectMaterial(m)">
@@ -22,7 +27,7 @@
             <div>
               <div style="font-size:18px;font-weight:700">{{ currentMaterial.title }}</div>
               <div style="color:#94a3b8;font-size:13px;margin-top:4px">
-                需阅读 {{ currentMaterial.requiredSeconds }} 秒后方可完成
+                需阅读 {{ currentMaterial.required_seconds }} 秒后方可完成
               </div>
             </div>
           </div>
@@ -31,7 +36,7 @@
           <el-divider />
           <div style="text-align:center">
             <el-button v-if="readCompleted" type="success" round disabled>已完成阅读</el-button>
-            <el-button v-else-if="elapsed >= currentMaterial.requiredSeconds" type="primary" @click="handleComplete" :loading="completing" round>标记完成</el-button>
+            <el-button v-else-if="elapsed >= currentMaterial.required_seconds" type="primary" @click="handleComplete" :loading="completing" round>标记完成</el-button>
             <el-button v-else type="info" round disabled>阅读中...（还需 {{ remaining }} 秒）</el-button>
           </div>
         </el-card>
@@ -49,7 +54,7 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
 import { getCourse } from '../../api/course'
-import { listMaterials, startReadMaterial, completeReadMaterial } from '../../api/material'
+import { listMaterialsWithStatus, startReadMaterial, completeReadMaterial } from '../../api/material'
 
 const route = useRoute()
 const store = useUserStore()
@@ -60,7 +65,13 @@ const loading = ref(false)
 const completing = ref(false)
 const elapsed = ref(0)
 const readCompleted = ref(false)
+const showUnfinishedOnly = ref(false)
 let timer = null
+
+const filteredMaterials = computed(() => {
+  if (!showUnfinishedOnly.value) return materials.value
+  return materials.value.filter(m => !m.completed)
+})
 
 const displayTime = computed(() => {
   const m = Math.floor(elapsed.value / 60)
@@ -70,15 +81,14 @@ const displayTime = computed(() => {
 
 const remaining = computed(() => {
   if (!currentMaterial.value) return 0
-  const r = currentMaterial.value.requiredSeconds - elapsed.value
+  const r = currentMaterial.value.required_seconds - elapsed.value
   return r > 0 ? r : 0
 })
 
 onMounted(async () => {
   loading.value = true
   course.value = await getCourse(route.params.id)
-  const raw = await listMaterials(route.params.id)
-  materials.value = raw.map(m => ({ ...m, completed: false }))
+  materials.value = await listMaterialsWithStatus(route.params.id, store.user.id)
   if (materials.value.length > 0) {
     currentMaterial.value = materials.value[0]
     await checkReadStatus()

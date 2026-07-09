@@ -43,3 +43,11 @@ export function submissionPage(params) {
 export function autoComment(submissionId, score) {
   return request({ url: '/submission/auto-comment', method: 'get', params: { submissionId, score } })
 }
+
+export function grantResubmit(assignmentId, studentId, deadline) {
+  return request({ url: '/assignment/grant-resubmit', method: 'post', params: { assignmentId, studentId, deadline } })
+}
+
+export function listResubmitOpportunities(studentId) {
+  return request({ url: '/assignment/resubmit-opportunities', method: 'get', params: { studentId } })
+}

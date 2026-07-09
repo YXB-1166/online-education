@@ -32,13 +32,13 @@ public interface AssignmentMapper {
             " order by id limit #{offset}, #{size}</script>")
     List<Assignment> selectPage(@Param("a") Assignment assignment, @Param("offset") int offset, @Param("size") int size);
 
-    @Insert("insert into tb_assignment(course_id, teacher_id, title, content, full_score, deadline) " +
-            "values(#{courseId}, #{teacherId}, #{title}, #{content}, #{fullScore}, #{deadline})")
+    @Insert("insert into tb_assignment(course_id, teacher_id, title, content, full_score, deadline, allow_submit_count) " +
+            "values(#{courseId}, #{teacherId}, #{title}, #{content}, #{fullScore}, #{deadline}, #{allowSubmitCount})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Assignment assignment);
 
     @Update("update tb_assignment set title=#{title}, content=#{content}, full_score=#{fullScore}, " +
-            "deadline=#{deadline} where id=#{id}")
+            "deadline=#{deadline}, allow_submit_count=#{allowSubmitCount} where id=#{id}")
     int update(Assignment assignment);
 
     @Delete("delete from tb_assignment where id=#{id}")

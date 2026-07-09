@@ -18,9 +18,11 @@
           <el-table-column prop="title" label="标题" min-width="160" />
           <el-table-column prop="fullScore" label="满分" width="80" />
           <el-table-column prop="deadline" label="截止时间" width="180" />
-          <el-table-column label="操作" width="200">
+          <el-table-column prop="allowSubmitCount" label="提交次数" width="80" align="center" />
+          <el-table-column label="操作" width="280">
             <template #default="{ row }">
               <el-button size="small" type="success" @click="$router.push('/teacher/courses/' + courseId + '/assignments/' + row.id + '/grade')" round>批改</el-button>
+              <el-button size="small" @click="openMakeupDialog(row)" round>补交管理</el-button>
               <el-button size="small" type="danger" @click="handleDeleteAssignment(row)" round>删除</el-button>
             </template>
           </el-table-column>
@@ -63,6 +65,25 @@
         <el-empty v-if="!loadingMaterials && materials.length === 0" description="暂无资料" />
       </div>
     </el-card>
+
+    <el-dialog v-model="showMakeupDialog" title="补交管理" width="600px">
+      <div v-if="makeupStudents.length === 0" style="text-align:center;padding:30px;color:#94a3b8">
+        该课程暂无学生
+      </div>
+      <el-table v-else :data="makeupStudents" stripe max-height="400">
+        <el-table-column prop="studentName" label="学生姓名" min-width="120" />
+        <el-table-column label="补交截止时间" min-width="200">
+          <template #default="{ row }">
+            <el-date-picker v-model="row.deadline" type="datetime" format="YYYY-MM-DD HH:mm" placeholder="设置补交截止时间" style="width:100%" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100">
+          <template #default="{ row }">
+            <el-button size="small" type="primary" @click="handleGrantResubmit(row)" round>确认</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -71,8 +92,10 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../../stores/user'
-import { assignmentPage, deleteAssignment } from '../../api/exam'
+import { assignmentPage, deleteAssignment, grantResubmit } from '../../api/exam'
 import { listMaterials, addMaterial, deleteMaterial } from '../../api/material'
+import { listSelectionsByCourse } from '../../api/course'
+import { listUsers } from '../../api/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,6 +114,10 @@ const loadingMaterials = ref(false)
 const addingMaterial = ref(false)
 const materialForm = ref({ title: '', content: '', requiredSeconds: 60 })
 
+const showMakeupDialog = ref(false)
+const makeupAssignmentId = ref(null)
+const makeupStudents = ref([])
+
 onMounted(() => { fetchAssignments(); fetchMaterials() })
 
 async function fetchAssignments() {
@@ -105,6 +132,32 @@ async function handleDeleteAssignment(row) {
   await deleteAssignment(row.id)
   ElMessage.success('已删除')
   fetchAssignments()
+}
+
+async function openMakeupDialog(row) {
+  makeupAssignmentId.value = row.id
+  const [selections, users] = await Promise.all([
+    listSelectionsByCourse(row.courseId, store.user.id),
+    listUsers()
+  ])
+  const userMap = {}
+  users.forEach(u => { userMap[u.id] = u.realName || u.username })
+  makeupStudents.value = selections.filter(s => s.status === '1').map(s => ({
+    studentId: s.studentId,
+    studentName: userMap[s.studentId] || '未知',
+    deadline: null
+  }))
+  showMakeupDialog.value = true
+}
+
+async function handleGrantResubmit(row) {
+  if (!row.deadline) {
+    ElMessage.warning('请选择补交截止时间')
+    return
+  }
+  await grantResubmit(makeupAssignmentId.value, row.studentId, row.deadline)
+  ElMessage.success('已给予补交机会')
+  row.deadline = null
 }
 
 async function fetchMaterials() {

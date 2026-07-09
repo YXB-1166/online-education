@@ -1,14 +1,17 @@
 package com.edu.exam.service;
 
 import com.edu.common.entity.Assignment;
+import com.edu.common.entity.ResubmitOpportunity;
 import com.edu.common.page.PageParam;
 import com.edu.common.page.PageResult;
 import com.edu.common.result.BusinessException;
 import com.edu.common.service.BaseService;
 import com.edu.exam.mapper.AssignmentMapper;
+import com.edu.exam.mapper.ResubmitOpportunityMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -16,6 +19,9 @@ public class AssignmentService extends BaseService {
 
     @Autowired
     private AssignmentMapper assignmentMapper;
+
+    @Autowired
+    private ResubmitOpportunityMapper resubmitMapper;
 
     public Assignment findById(Long id) {
         Assignment assignment = assignmentMapper.selectById(id);
@@ -59,6 +65,19 @@ public class AssignmentService extends BaseService {
             throw new BusinessException("删除作业失败");
         }
         log.info("删除作业: id={}", id);
+    }
+
+    public void grantResubmit(Long assignmentId, Long studentId, LocalDateTime deadline) {
+        ResubmitOpportunity opp = new ResubmitOpportunity();
+        opp.setAssignmentId(assignmentId);
+        opp.setStudentId(studentId);
+        opp.setDeadline(deadline);
+        resubmitMapper.upsert(opp);
+        log.info("给予补交机会: assignmentId={}, studentId={}, deadline={}", assignmentId, studentId, deadline);
+    }
+
+    public List<ResubmitOpportunity> getResubmitOpportunities(Long studentId) {
+        return resubmitMapper.selectByStudent(studentId);
     }
 
 }

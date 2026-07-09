@@ -5,6 +5,7 @@ import com.edu.common.entity.MaterialReadRecord;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface MaterialMapper {
@@ -32,8 +33,22 @@ public interface MaterialMapper {
     @Select("select * from tb_material_read where material_id = #{materialId} and student_id = #{studentId}")
     MaterialReadRecord selectReadRecord(@Param("materialId") Long materialId, @Param("studentId") Long studentId);
 
+    @Update("update tb_material_read set read_time = now() " +
+            "where material_id = #{materialId} and student_id = #{studentId} and completed = 0")
+    int resetReadTime(@Param("materialId") Long materialId, @Param("studentId") Long studentId);
+
+    @Update("update tb_material_read set completed = 0, completed_time = null, read_time = now() " +
+            "where material_id = #{materialId} and student_id = #{studentId} and completed = 1")
+    int restartRead(@Param("materialId") Long materialId, @Param("studentId") Long studentId);
+
     @Update("update tb_material_read set completed = 1, completed_time = now() " +
             "where material_id = #{materialId} and student_id = #{studentId}")
     int markComplete(@Param("materialId") Long materialId, @Param("studentId") Long studentId);
+
+    @Select("select m.*, coalesce(mr.completed, 0) as completed " +
+            "from tb_material m " +
+            "left join tb_material_read mr on m.id = mr.material_id and mr.student_id = #{studentId} " +
+            "where m.course_id = #{courseId} order by m.create_time desc")
+    List<Map<String, Object>> selectByCourseWithStatus(@Param("courseId") Long courseId, @Param("studentId") Long studentId);
 
 }

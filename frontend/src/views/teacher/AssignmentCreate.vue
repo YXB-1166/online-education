@@ -15,6 +15,10 @@
         <el-form-item label="截止时间" prop="deadline">
           <el-date-picker v-model="form.deadline" type="datetime" format="YYYY-MM-DD HH:mm:ss" placeholder="请选择截止时间" style="width:100%" />
         </el-form-item>
+        <el-form-item label="提交次数">
+          <el-input-number v-model="form.allowSubmitCount" :min="1" :max="3" :step="1" />
+          <span style="margin-left:8px;color:#94a3b8;font-size:12px">允许学生提交 {{ form.allowSubmitCount }} 次</span>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" round>发布作业</el-button>
           <el-button @click="$router.back()" round>返回</el-button>
@@ -35,7 +39,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useUserStore()
 const formRef = ref(null)
-const form = reactive({ title: '', content: '', fullScore: 100, deadline: '' })
+const form = reactive({ title: '', content: '', fullScore: 100, deadline: '', allowSubmitCount: 1 })
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   deadline: [{ required: true, message: '请选择截止时间', trigger: 'blur' }]
@@ -46,6 +50,6 @@ async function handleSubmit() {
   if (!valid) return
   await addAssignment({ courseId: Number(route.params.id), teacherId: store.user.id, ...form })
   ElMessage.success('发布成功')
-  router.push('/teacher/courses')
+  router.push(`/teacher/courses/${route.params.id}/assignments`)
 }
 </script>

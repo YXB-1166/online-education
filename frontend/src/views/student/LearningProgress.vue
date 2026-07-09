@@ -97,7 +97,7 @@ onMounted(async () => {
       const below60 = p.below60Count || 0
       const avg = p.avgScore || 0
       const missed = total - submitted
-      const risk = (total > 0 && submitted < total) || below60 > 0 || (avg > 0 && avg < 60 && graded >= total / 2)
+      const risk = (missed >= 3 && missed >= total / 3) || (below60 >= 3 && below60 >= graded / 2) || (avg > 0 && avg < 60 && graded >= total * 2 / 3)
       return { ...p, totalAssignments: total, submittedCount: submitted, gradedCount: graded, below60Count: below60, avgScore: avg, missedCount: missed, risk }
     })
   } finally {

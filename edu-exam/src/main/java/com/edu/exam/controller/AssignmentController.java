@@ -6,9 +6,11 @@ import com.edu.common.page.PageParam;
 import com.edu.common.page.PageResult;
 import com.edu.common.result.Result;
 import com.edu.exam.service.AssignmentService;
+import com.edu.common.entity.ResubmitOpportunity;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
 
 import java.util.List;
 
@@ -49,6 +51,20 @@ public class AssignmentController {
     public Result<Void> update(@Valid @RequestBody Assignment assignment) {
         assignmentService.update(assignment);
         return Result.ok();
+    }
+
+    @PostMapping("/grant-resubmit")
+    @RequireRole(2)
+    public Result<Void> grantResubmit(@RequestParam Long assignmentId, @RequestParam Long studentId,
+                                       @RequestParam String deadline) {
+        assignmentService.grantResubmit(assignmentId, studentId, LocalDateTime.parse(deadline.replace(" ", "T")));
+        return Result.ok();
+    }
+
+    @GetMapping("/resubmit-opportunities")
+    @RequireRole({1, 2})
+    public Result<List<ResubmitOpportunity>> resubmitOpportunities(@RequestParam Long studentId) {
+        return Result.ok(assignmentService.getResubmitOpportunities(studentId));
     }
 
     @DeleteMapping("/{id}")

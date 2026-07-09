@@ -19,6 +19,7 @@ public class Submission implements Serializable {
     private Integer       score;
     private String        comment;
     private Integer       status;
+    private Integer       submitCount;
     private LocalDateTime submitTime;
     private LocalDateTime gradeTime;
 
@@ -38,6 +39,8 @@ public class Submission implements Serializable {
     public void setComment(String comment) { this.comment = comment; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Integer getSubmitCount() { return submitCount; }
+    public void setSubmitCount(Integer submitCount) { this.submitCount = submitCount; }
     public LocalDateTime getSubmitTime() { return submitTime; }
     public void setSubmitTime(LocalDateTime submitTime) { this.submitTime = submitTime; }
     public LocalDateTime getGradeTime() { return gradeTime; }

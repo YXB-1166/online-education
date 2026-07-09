@@ -33,8 +33,10 @@ public interface SubmissionMapper {
             " order by id limit #{offset}, #{size}</script>")
     List<Submission> selectPage(@Param("s") Submission submission, @Param("offset") int offset, @Param("size") int size);
 
-    @Insert("insert into tb_submission(assignment_id, student_id, content, attachment_url, status, submit_time) " +
-            "values(#{assignmentId}, #{studentId}, #{content}, #{attachmentUrl}, #{status}, #{submitTime})")
+    @Insert("insert into tb_submission(assignment_id, student_id, content, attachment_url, status, submit_time, submit_count) " +
+            "values(#{assignmentId}, #{studentId}, #{content}, #{attachmentUrl}, #{status}, #{submitTime}, 1) " +
+            "on duplicate key update content=#{content}, attachment_url=#{attachmentUrl}, status=1, " +
+            "submit_time=#{submitTime}, submit_count=submit_count+1, score=null, comment=null, grade_time=null")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Submission submission);
 
@@ -47,6 +49,10 @@ public interface SubmissionMapper {
     @Update("update tb_submission set score=#{score}, comment=#{comment}, status=2, grade_time=#{gradeTime} where id=#{id}")
     int grade(@Param("id") Long id, @Param("score") Integer score,
               @Param("comment") String comment, @Param("gradeTime") java.time.LocalDateTime gradeTime);
+
+    @Select("select s.* from tb_submission s join tb_assignment a on s.assignment_id = a.id " +
+            "where s.student_id = #{studentId} and a.course_id = #{courseId}")
+    List<Submission> selectByStudentAndCourse(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
     @Select("select s.*, a.title as assignmentTitle, a.full_score as fullScore, a.content as assignmentContent, " +
             "c.course_name, u.real_name as studentName " +

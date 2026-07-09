@@ -20,6 +20,7 @@ const routes = [
       { path: 'my-grades', name: 'MyGrades', component: () => import('../views/student/MyGrades.vue'), meta: { title: '我的成绩' } },
       { path: 'courses/:id/forum', name: 'Forum', component: () => import('../views/student/Forum.vue'), meta: { title: '课程论坛' } },
       { path: 'learning-progress', name: 'LearningProgress', component: () => import('../views/student/LearningProgress.vue'), meta: { title: '学习进度' } },
+      { path: 'student/profile', name: 'StudentProfile', component: () => import('../views/student/StudentProfile.vue'), meta: { title: '个人设置' } },
       { path: 'teacher/courses', name: 'TeacherCourses', component: () => import('../views/teacher/MyCourses.vue'), meta: { title: '我的课程' } },
       { path: 'teacher/courses/create', name: 'CourseCreate', component: () => import('../views/teacher/CourseCreate.vue'), meta: { title: '创建课程' } },
       { path: 'teacher/courses/:id/edit', name: 'CourseEdit', component: () => import('../views/teacher/CourseEdit.vue'), meta: { title: '编辑课程' } },

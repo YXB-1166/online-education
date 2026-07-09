@@ -4,6 +4,10 @@ export function listMaterials(courseId) {
   return request({ url: `/course/material/list/${courseId}`, method: 'get' })
 }
 
+export function listMaterialsWithStatus(courseId, studentId) {
+  return request({ url: `/course/material/list-with-status/${courseId}`, method: 'get', params: { studentId } })
+}
+
 export function getMaterial(id) {
   return request({ url: `/course/material/${id}`, method: 'get' })
 }

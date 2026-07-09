@@ -1,10 +1,14 @@
 package com.edu.exam.service;
 
+import com.edu.common.entity.Assignment;
+import com.edu.common.entity.ResubmitOpportunity;
 import com.edu.common.entity.Submission;
 import com.edu.common.page.PageParam;
 import com.edu.common.page.PageResult;
 import com.edu.common.result.BusinessException;
 import com.edu.common.service.BaseService;
+import com.edu.exam.mapper.AssignmentMapper;
+import com.edu.exam.mapper.ResubmitOpportunityMapper;
 import com.edu.exam.mapper.SubmissionMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,12 @@ public class SubmissionService extends BaseService {
 
     @Autowired
     private SubmissionMapper submissionMapper;
+
+    @Autowired
+    private AssignmentMapper assignmentMapper;
+
+    @Autowired
+    private ResubmitOpportunityMapper resubmitMapper;
 
     public Submission findById(Long id) {
         Submission submission = submissionMapper.selectById(id);
@@ -40,7 +50,34 @@ public class SubmissionService extends BaseService {
     }
 
     public void add(Submission submission) {
-        submission.setSubmitTime(LocalDateTime.now());
+        Assignment assignment = assignmentMapper.selectById(submission.getAssignmentId());
+        if (assignment == null) {
+            throw new BusinessException("作业不存在");
+        }
+        Submission existing = null;
+        List<Submission> list = submissionMapper.selectList(submission);
+        if (list != null && !list.isEmpty()) {
+            existing = list.get(0);
+        }
+        int submitCount = existing != null ? existing.getSubmitCount() != null ? existing.getSubmitCount() : 0 : 0;
+        int maxCount = assignment.getAllowSubmitCount() != null ? assignment.getAllowSubmitCount() : 1;
+        LocalDateTime now = LocalDateTime.now();
+        boolean deadlinePassed = assignment.getDeadline() != null && now.isAfter(assignment.getDeadline());
+        boolean hasOpportunity = false;
+        if (deadlinePassed) {
+            ResubmitOpportunity opp = resubmitMapper.selectByAssignmentAndStudent(
+                    submission.getAssignmentId(), submission.getStudentId());
+            if (opp != null && opp.getDeadline() != null && now.isBefore(opp.getDeadline())) {
+                hasOpportunity = true;
+            }
+        }
+        if (deadlinePassed && !hasOpportunity) {
+            throw new BusinessException("已超过截止时间，无法提交");
+        }
+        if (existing != null && !deadlinePassed && submitCount >= maxCount) {
+            throw new BusinessException("已达到最大提交次数");
+        }
+        submission.setSubmitTime(now);
         submission.setStatus(1);
         if (submissionMapper.insert(submission) == 0) {
             log.warn("提交作业失败: assignmentId={}, studentId={}", submission.getAssignmentId(), submission.getStudentId());

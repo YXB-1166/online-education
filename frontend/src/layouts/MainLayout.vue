@@ -18,6 +18,9 @@
         <el-menu-item v-if="store.user?.role === 1" index="/learning-progress">
           <el-icon><TrendCharts /></el-icon><span>学习进度</span>
         </el-menu-item>
+        <el-menu-item v-if="store.user?.role === 1" index="/student/profile">
+          <el-icon><User /></el-icon><span>个人设置</span>
+        </el-menu-item>
         <el-sub-menu v-if="store.user?.role === 2" index="/teacher">
           <template #title>
             <el-icon><User /></el-icon><span>教师管理</span>
@@ -63,7 +66,7 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item v-if="store.user?.role === 2" command="profile">
+              <el-dropdown-item v-if="store.user?.role === 1 || store.user?.role === 2" command="profile">
                 <el-icon><User /></el-icon>个人设置
               </el-dropdown-item>
               <el-dropdown-item command="logout">
@@ -132,7 +135,7 @@ function handleCommand(cmd) {
     store.logout()
     router.push('/login')
   } else if (cmd === 'profile') {
-    router.push('/teacher/profile')
+    router.push(store.user?.role === 1 ? '/student/profile' : '/teacher/profile')
   }
 }
 </script>

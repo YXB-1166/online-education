@@ -21,6 +21,7 @@ public class Assignment implements Serializable {
     private String        content;
     private Integer       fullScore;
     private LocalDateTime deadline;
+    private Integer       allowSubmitCount = 1;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
@@ -42,5 +43,7 @@ public class Assignment implements Serializable {
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }
     public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
+    public Integer getAllowSubmitCount() { return allowSubmitCount; }
+    public void setAllowSubmitCount(Integer allowSubmitCount) { this.allowSubmitCount = allowSubmitCount; }
 
 }
