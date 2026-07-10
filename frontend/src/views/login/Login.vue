@@ -9,22 +9,47 @@
         <h2>在线教育辅助教学系统</h2>
         <p class="subtitle">Online Education Platform</p>
       </div>
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="large">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" :prefix-icon="User" />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="form.password" type="password" show-password placeholder="请输入密码" :prefix-icon="Lock" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleLogin" :loading="loading" style="width:100%;height:44px;font-size:16px;border-radius:10px">
-            登 录
-          </el-button>
-        </el-form-item>
-      </el-form>
-      <div class="login-footer">
-        <p>测试账号：zhangsan / 123456（学生）</p>
-      </div>
+      <el-tabs v-model="tab" stretch>
+        <el-tab-pane label="登录" name="login">
+          <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-position="top" size="large">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="loginForm.username" placeholder="请输入用户名" :prefix-icon="User" />
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input v-model="loginForm.password" type="password" show-password placeholder="请输入密码" :prefix-icon="Lock" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleLogin" :loading="loading" style="width:100%;height:44px;font-size:16px;border-radius:10px">
+                登 录
+              </el-button>
+            </el-form-item>
+          </el-form>
+          <div class="login-footer">
+            <p>测试账号：zhangsan / 123456（学生）</p>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="注册" name="register">
+          <el-form ref="regFormRef" :model="regForm" :rules="regRules" label-position="top" size="large">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="regForm.username" placeholder="请设置用户名" :prefix-icon="User" />
+            </el-form-item>
+            <el-form-item label="姓名" prop="realName">
+              <el-input v-model="regForm.realName" placeholder="请输入真实姓名" />
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input v-model="regForm.password" type="password" show-password placeholder="请设置密码" :prefix-icon="Lock" />
+            </el-form-item>
+            <el-form-item label="确认密码" prop="confirmPassword">
+              <el-input v-model="regForm.confirmPassword" type="password" show-password placeholder="请再次输入密码" :prefix-icon="Lock" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleRegister" :loading="regLoading" style="width:100%;height:44px;font-size:16px;border-radius:10px">
+                注 册
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
     </el-card>
   </div>
 </template>
@@ -35,24 +60,25 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
-import { login } from '../../api/user'
+import { login, register } from '../../api/user'
 
 const router = useRouter()
 const store = useUserStore()
-const formRef = ref(null)
+const tab = ref('login')
+const loginFormRef = ref(null)
 const loading = ref(false)
-const form = reactive({ username: '', password: '' })
-const rules = {
+const loginForm = reactive({ username: '', password: '' })
+const loginRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
 async function handleLogin() {
-  const valid = await formRef.value.validate().catch(() => {})
+  const valid = await loginFormRef.value.validate().catch(() => {})
   if (!valid) return
   loading.value = true
   try {
-    const res = await login(form.username, form.password)
+    const res = await login(loginForm.username, loginForm.password)
     localStorage.setItem('token', res.token)
     store.setUser(res.user)
     router.push('/')
@@ -60,6 +86,35 @@ async function handleLogin() {
     // 错误已在拦截器中处理
   } finally {
     loading.value = false
+  }
+}
+
+const regFormRef = ref(null)
+const regLoading = ref(false)
+const regForm = reactive({ username: '', realName: '', password: '', confirmPassword: '' })
+const regRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
+  password: [{ required: true, message: '请设置密码', trigger: 'blur' }],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    { validator: (rule, value, cb) => value === regForm.password ? cb() : cb(new Error('两次密码不一致')), trigger: 'blur' }
+  ]
+}
+
+async function handleRegister() {
+  const valid = await regFormRef.value.validate().catch(() => {})
+  if (!valid) return
+  regLoading.value = true
+  try {
+    const res = await register({ username: regForm.username, password: regForm.password, realName: regForm.realName })
+    ElMessage.success('注册成功')
+    localStorage.setItem('token', res.token)
+    store.setUser(res.user)
+    router.push('/')
+  } catch (_) {
+  } finally {
+    regLoading.value = false
   }
 }
 </script>

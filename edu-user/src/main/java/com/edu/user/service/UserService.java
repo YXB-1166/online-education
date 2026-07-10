@@ -40,6 +40,24 @@ public class UserService extends BaseService {
         return new PageResult<>(list, total, param.getPageNum(), param.getPageSize());
     }
 
+    public Map<String, Object> register(User user) {
+        if (userMapper.selectByUsername(user.getUsername()) != null) {
+            throw new BusinessException("用户名已存在");
+        }
+        user.setRole(1);
+        if (user.getStatus() == null) user.setStatus(1);
+        if (userMapper.insert(user) == 0) {
+            log.warn("注册失败: username={}", user.getUsername());
+            throw new BusinessException("注册失败");
+        }
+        String token = JwtUtil.generate(user.getId(), user.getRole());
+        log.info("注册成功: id={}, username={}", user.getId(), user.getUsername());
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", token);
+        result.put("user", user);
+        return result;
+    }
+
     public void add(User user) {
         if (userMapper.insert(user) == 0) {
             log.warn("新增用户失败: username={}", user.getUsername());

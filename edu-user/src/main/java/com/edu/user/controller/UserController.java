@@ -32,6 +32,11 @@ public class UserController {
         return Result.ok(userService.login(body.get("username"), body.get("password")));
     }
 
+    @PostMapping("/register")
+    public Result<Map<String, Object>> register(@Valid @RequestBody User user) {
+        return Result.ok(userService.register(user));
+    }
+
     @GetMapping("/{id}")
     @RequireRole({1, 2, 3})
     public Result<User> getById(@PathVariable Long id) {
