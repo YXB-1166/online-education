@@ -33,7 +33,11 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Result<Map<String, Object>> register(@Valid @RequestBody User user) {
+    public Result<Map<String, Object>> register(@RequestBody Map<String, String> body) {
+        User user = new User();
+        user.setUsername(body.get("username"));
+        user.setPassword(body.get("password"));
+        user.setRealName(body.get("realName"));
         return Result.ok(userService.register(user));
     }
 
