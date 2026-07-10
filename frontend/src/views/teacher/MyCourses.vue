@@ -2,7 +2,7 @@
   <div>
     <div class="page-title">我的课程</div>
     <el-card>
-      <el-table :data="courses" stripe v-loading="loading">
+      <el-table :data="pagedCourses" stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="courseName" label="课程名称" min-width="140" />
         <el-table-column prop="credit" label="学分" width="60" />
@@ -31,6 +31,15 @@
           </template>
         </el-table-column>
       </el-table>
+      <div style="margin-top:16px;text-align:center">
+        <el-pagination
+          v-if="total > pageSize"
+          v-model:current-page="pageNum"
+          :page-size="pageSize"
+          :total="total"
+          layout="prev, pager, next"
+        />
+      </div>
     </el-card>
 
     <el-dialog v-model="startDialogVisible" title="开课设置" width="420">
@@ -56,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../../stores/user'
 import { myTeaching, startCourse, endCourse } from '../../api/course'
@@ -64,14 +73,21 @@ import { myTeaching, startCourse, endCourse } from '../../api/course'
 const store = useUserStore()
 const courses = ref([])
 const loading = ref(false)
+const pageNum = ref(1)
+const pageSize = 8
 const startDialogVisible = ref(false)
 const starting = ref(false)
 const startForm = ref({ homeworkRatio: 50, examRatio: 50, examTime: null })
 const currentCourseId = ref(null)
 
+const total = computed(() => courses.value.length)
+const pagedCourses = computed(() =>
+  courses.value.slice((pageNum.value - 1) * pageSize, pageNum.value * pageSize)
+)
+
 onMounted(async () => {
   loading.value = true
-  courses.value = await myTeaching(store.user.id)
+  courses.value = (await myTeaching(store.user.id)).sort((a, b) => a.id - b.id)
   loading.value = false
 })
 
@@ -103,7 +119,8 @@ async function handleStart() {
   await startCourse(currentCourseId.value, startForm.value.homeworkRatio, startForm.value.examRatio, formatDate(startForm.value.examTime))
   ElMessage.success('开课成功，通知已推送给学生')
   startDialogVisible.value = false
-  courses.value = await myTeaching(store.user.id)
+  courses.value = (await myTeaching(store.user.id)).sort((a, b) => a.id - b.id)
+  pageNum.value = 1
   starting.value = false
 }
 
@@ -111,6 +128,7 @@ async function handleEnd(row) {
   await ElMessageBox.confirm('确认结课？结课后学生将无法提交作业。')
   await endCourse(row.id)
   ElMessage.success('已结课')
-  courses.value = await myTeaching(store.user.id)
+  courses.value = (await myTeaching(store.user.id)).sort((a, b) => a.id - b.id)
+  pageNum.value = 1
 }
 </script>

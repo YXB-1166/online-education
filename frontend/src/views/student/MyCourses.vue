@@ -86,7 +86,7 @@ const generating = ref(false)
 onMounted(async () => {
   const [list, users] = await Promise.all([myCourses(store.user.id), listUsers()])
   users.forEach(u => { if (u.role === 2) teacherMap.value[u.id] = u.realName })
-  courses.value = list
+  courses.value = list.sort((a, b) => a.id - b.id)
 })
 
 async function showSummary(c) {
@@ -111,7 +111,7 @@ async function handleAutoGenerate() {
 async function handleDrop(courseId) {
   await dropCourse(store.user.id, courseId)
   ElMessage.success('退课成功')
-  courses.value = await myCourses(store.user.id)
+  courses.value = (await myCourses(store.user.id)).sort((a, b) => a.id - b.id)
 }
 
 function importanceType(imp) {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page-wrap">
     <div class="page-title">课程广场</div>
 
     <div class="search-bar">
@@ -8,34 +8,7 @@
       <el-button type="primary" @click="handleSearch" :icon="Search">搜索</el-button>
     </div>
 
-    <div class="course-grid">
-      <el-card v-for="c in list" :key="c.id" class="course-card" shadow="hover">
-        <div class="course-card-top">
-          <div class="course-icon">{{ c.courseName.charAt(0) }}</div>
-          <div class="course-meta">
-            <span class="course-name">{{ c.courseName }}</span>
-            <span class="course-teacher">
-              <el-icon><User /></el-icon>
-              {{ c.teacherName || '未知' }}
-            </span>
-          </div>
-        </div>
-        <p class="course-desc">{{ c.description || '暂无介绍' }}</p>
-        <div class="course-stats">
-          <div class="stat-item">
-            <span class="stat-num">{{ c.enrolledCount }}</span>
-            <span class="stat-label">已选 / {{ c.maxStudents }}</span>
-          </div>
-        </div>
-        <div class="course-actions">
-          <el-button size="small" @click="$router.push('/courses/' + c.id)" round>查看详情</el-button>
-          <el-button v-if="store.user?.role === 1" size="small" type="primary" @click="handleSelect(c.id)" round>
-            选课
-          </el-button>
-        </div>
-      </el-card>
-    </div>
-    <div style="margin-top:24px;text-align:center">
+    <div class="pagination-bar">
       <el-pagination
         v-if="total > pageSize"
         v-model:current-page="pageNum"
@@ -44,6 +17,26 @@
         layout="prev, pager, next"
         @current-change="fetchData"
       />
+    </div>
+
+    <div class="course-grid">
+      <el-card v-for="c in list" :key="c.id" class="course-card" shadow="hover">
+        <div class="card-top">
+          <div class="course-icon">{{ c.courseName.charAt(0) }}</div>
+          <div class="course-meta">
+            <span class="course-name">{{ c.courseName }}</span>
+            <span class="course-teacher">{{ c.teacherName || '未知' }} 授课</span>
+          </div>
+        </div>
+        <p class="course-desc">{{ c.description || '暂无介绍' }}</p>
+        <div class="card-bottom">
+          <span class="stat">{{ c.enrolledCount }}/{{ c.maxStudents }} 已选</span>
+          <div class="card-actions">
+            <el-button size="small" @click="$router.push('/courses/' + c.id)" round>详情</el-button>
+            <el-button v-if="store.user?.role === 1" size="small" type="primary" @click="handleSelect(c.id)" round>选课</el-button>
+          </div>
+        </div>
+      </el-card>
     </div>
   </div>
 </template>
@@ -58,7 +51,7 @@ const store = useUserStore()
 const list = ref([])
 const total = ref(0)
 const pageNum = ref(1)
-const pageSize = 8
+const pageSize = 9
 const keyword = ref('')
 
 onMounted(() => {
@@ -89,49 +82,51 @@ async function handleSelect(courseId) {
 .search-bar {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 .course-card {
-  border-radius: 14px !important;
+  border-radius: 12px !important;
+  border: 1px solid #eef2f6;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .course-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15) !important;
+  transform: translateY(-3px);
+  border-color: #c7d2fe;
+  box-shadow: 0 10px 24px -8px rgba(79,70,229,0.15) !important;
 }
-.course-card-top {
+.course-card :deep(.el-card__body) { padding: 18px; }
+.card-top {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .course-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   flex-shrink: 0;
 }
 .course-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex: 1;
   min-width: 0;
 }
 .course-name {
-  font-size: 16px;
+  display: block;
+  font-size: 14px;
   font-weight: 600;
   color: #1e293b;
   overflow: hidden;
@@ -139,45 +134,36 @@ async function handleSelect(courseId) {
   white-space: nowrap;
 }
 .course-teacher {
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 .course-desc {
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
-  line-height: 1.6;
-  margin: 0 0 16px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-height: 1.5;
+  margin: 0 0 10px;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.course-stats {
+.card-bottom {
   display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
 }
-.stat-item {
+.stat {
+  font-size: 12px;
+  color: #4f46e5;
+  font-weight: 600;
+}
+.card-actions {
   display: flex;
-  align-items: baseline;
   gap: 6px;
 }
-.stat-num {
-  font-size: 20px;
-  font-weight: 700;
-  color: #4f46e5;
-}
-.stat-label {
-  font-size: 12px;
-  color: #94a3b8;
-}
-.course-actions {
-  display: flex;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+.pagination-bar {
+  text-align: center;
+  margin: 16px 0;
 }
 </style>

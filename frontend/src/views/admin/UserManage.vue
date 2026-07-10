@@ -1,7 +1,15 @@
 <template>
   <div>
     <div class="page-title">用户管理</div>
-    <div style="margin-bottom:16px">
+    <div style="margin-bottom:16px;display:flex;gap:12px;align-items:center">
+      <el-input v-model="keyword" placeholder="搜索用户名或姓名..." clearable style="width:240px"
+        @keyup.enter="pageNum = 1; fetchData()" />
+      <el-select v-model="roleFilter" placeholder="角色筛选" clearable style="width:130px" @change="pageNum = 1; fetchData()">
+        <el-option label="全部" value="" />
+        <el-option :value="1" label="学生" />
+        <el-option :value="2" label="教师" />
+        <el-option :value="3" label="管理员" />
+      </el-select>
       <el-button type="primary" @click="openAddDialog" round>
         <el-icon><Plus /></el-icon>新增用户
       </el-button>
@@ -127,12 +135,20 @@ const detailData = ref({})
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = 10
+const keyword = ref('')
+const roleFilter = ref('')
 
 onMounted(() => fetchData())
 
 async function fetchData() {
   loading.value = true
-  const res = await userPage({ pageNum: pageNum.value, pageSize })
+  const params = { pageNum: pageNum.value, pageSize }
+  if (keyword.value.trim()) {
+    params.username = keyword.value.trim()
+    params.realName = keyword.value.trim()
+  }
+  if (roleFilter.value !== '') params.role = roleFilter.value
+  const res = await userPage(params)
   users.value = res.list
   total.value = res.total
   loading.value = false

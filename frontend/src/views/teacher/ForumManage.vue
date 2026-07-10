@@ -12,6 +12,8 @@
             <span class="post-title">{{ p.title }}</span>
             <span class="post-info">{{ userMap[p.userId] || '未知' }} · {{ p.createTime }} · {{ p.replyCount || 0 }} 回复</span>
           </div>
+          <el-tag v-if="p.status === 0 || p.status === '0'" size="small" type="warning" effect="plain">待审核</el-tag>
+          <el-tag v-else-if="p.status === 2 || p.status === '2'" size="small" type="primary" effect="plain">置顶</el-tag>
           <el-button size="small" type="danger" @click="handleDelete(p.id)" round>删除</el-button>
         </div>
         <div class="post-content">{{ p.content }}</div>
@@ -35,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../../stores/user'
@@ -44,10 +46,19 @@ import { listUsers } from '../../api/user'
 
 const route = useRoute()
 const store = useUserStore()
-const posts = ref([])
+const rawPosts = ref([])
 const loading = ref(false)
 const userMap = ref({})
 const replyUserMap = ref({})
+
+const posts = computed(() =>
+  [...rawPosts.value].sort((a, b) => {
+    const sa = String(a.status || '0'), sb = String(b.status || '0')
+    if (sa === '0' && sb !== '0') return -1
+    if (sa !== '0' && sb === '0') return 1
+    return 0
+  })
+)
 
 onMounted(async () => {
   loading.value = true
@@ -55,7 +66,7 @@ onMounted(async () => {
     listForumPosts({ courseId: route.params.id }),
     listUsers()
   ])
-  posts.value = postList
+  rawPosts.value = postList
   users.forEach(u => { userMap.value[u.id] = u.realName; replyUserMap.value[u.id] = u.realName })
   loading.value = false
 })
@@ -78,7 +89,7 @@ async function handleDelete(id) {
   await ElMessageBox.confirm('确认删除该帖子？')
   await deleteForumPost(id)
   ElMessage.success('删除成功')
-  posts.value = await listForumPosts({ courseId: route.params.id })
+  rawPosts.value = await listForumPosts({ courseId: route.params.id })
 }
 </script>
 
