@@ -24,6 +24,7 @@ public class Course implements Serializable {
     private Integer       maxStudents;
 
     private Integer       enrolledCount;
+    private String        teacherName;
     private String        status;
     private Integer       homeworkRatio;
     private Integer       examRatio;
@@ -47,6 +48,8 @@ public class Course implements Serializable {
     public void setMaxStudents(Integer maxStudents) { this.maxStudents = maxStudents; }
     public Integer getEnrolledCount() { return enrolledCount; }
     public void setEnrolledCount(Integer enrolledCount) { this.enrolledCount = enrolledCount; }
+    public String getTeacherName() { return teacherName; }
+    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getStartTime() { return startTime; }

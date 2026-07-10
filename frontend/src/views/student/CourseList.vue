@@ -16,7 +16,7 @@
             <span class="course-name">{{ c.courseName }}</span>
             <span class="course-teacher">
               <el-icon><User /></el-icon>
-              {{ teacherMap[c.teacherId] || '未知' }}
+              {{ c.teacherName || '未知' }}
             </span>
           </div>
         </div>
@@ -54,19 +54,14 @@ import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { coursePage, selectCourse } from '../../api/course'
-import { listUsers } from '../../api/user'
-
 const store = useUserStore()
 const list = ref([])
-const teacherMap = ref({})
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = 8
 const keyword = ref('')
 
-onMounted(async () => {
-  const [users] = await Promise.all([listUsers()])
-  users.forEach(u => { if (u.role === 2) teacherMap.value[u.id] = u.realName })
+onMounted(() => {
   fetchData()
 })
 

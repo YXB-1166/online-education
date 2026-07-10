@@ -12,49 +12,67 @@ public interface CourseMapper {
     @Select("select * from tb_course where id = #{id}")
     Course selectById(@Param("id") Long id);
 
-    @Select("<script>select * from tb_course where status != '0' and status != '4'" +
-            "<if test='courseName != null'> and (course_name like concat('%',#{courseName},'%') or description like concat('%',#{courseName},'%'))</if>" +
-            "<if test='teacherId != null'> and teacher_id = #{teacherId}</if>" +
-            "<if test='status != null'> and status = #{status}</if>" +
-            " order by id</script>")
+    @Select("<script>select c.*, u.real_name as teacher_name from tb_course c left join tb_user u on c.teacher_id = u.id" +
+            " where c.status != '0' and c.status != '4'" +
+            "<if test='courseName != null'> and (c.course_name like concat('%',#{courseName},'%')" +
+            " or c.description like concat('%',#{courseName},'%')" +
+            " or u.real_name like concat('%',#{courseName},'%'))</if>" +
+            "<if test='teacherId != null'> and c.teacher_id = #{teacherId}</if>" +
+            "<if test='status != null'> and c.status = #{status}</if>" +
+            " order by c.id</script>")
     List<Course> selectList(Course course);
 
-    @Select("<script>select count(*) from tb_course where status != '0' and status != '4'" +
-            "<if test='courseName != null'> and (course_name like concat('%',#{courseName},'%') or description like concat('%',#{courseName},'%'))</if>" +
-            "<if test='teacherId != null'> and teacher_id = #{teacherId}</if>" +
-            "<if test='status != null'> and status = #{status}</if>" +
+    @Select("<script>select count(*) from tb_course c left join tb_user u on c.teacher_id = u.id" +
+            " where c.status != '0' and c.status != '4'" +
+            "<if test='courseName != null'> and (c.course_name like concat('%',#{courseName},'%')" +
+            " or c.description like concat('%',#{courseName},'%')" +
+            " or u.real_name like concat('%',#{courseName},'%'))</if>" +
+            "<if test='teacherId != null'> and c.teacher_id = #{teacherId}</if>" +
+            "<if test='status != null'> and c.status = #{status}</if>" +
             "</script>")
     long countList(Course course);
 
-    @Select("<script>select * from tb_course where status != '0' and status != '4'" +
-            "<if test='c.courseName != null'> and (course_name like concat('%',#{c.courseName},'%') or description like concat('%',#{c.courseName},'%'))</if>" +
-            "<if test='c.teacherId != null'> and teacher_id = #{c.teacherId}</if>" +
-            "<if test='c.status != null'> and status = #{c.status}</if>" +
-            " order by id limit #{offset}, #{size}</script>")
+    @Select("<script>select c.*, u.real_name as teacher_name from tb_course c left join tb_user u on c.teacher_id = u.id" +
+            " where c.status != '0' and c.status != '4'" +
+            "<if test='c.courseName != null'> and (c.course_name like concat('%',#{c.courseName},'%')" +
+            " or c.description like concat('%',#{c.courseName},'%')" +
+            " or u.real_name like concat('%',#{c.courseName},'%'))</if>" +
+            "<if test='c.teacherId != null'> and c.teacher_id = #{c.teacherId}</if>" +
+            "<if test='c.status != null'> and c.status = #{c.status}</if>" +
+            " order by c.id limit #{offset}, #{size}</script>")
     List<Course> selectPage(@Param("c") Course course, @Param("offset") int offset, @Param("size") int size);
 
-    @Select("<script>select * from tb_course where status != '0' and status != '4'" +
-            "<if test='c.courseName != null'> and (course_name like concat('%',#{c.courseName},'%') or description like concat('%',#{c.courseName},'%'))</if>" +
-            "<if test='c.teacherId != null'> and teacher_id = #{c.teacherId}</if>" +
-            "<if test='c.status != null'> and status = #{c.status}</if>" +
-            " and id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
-            " order by id</script>")
+    @Select("<script>select c.*, u.real_name as teacher_name from tb_course c left join tb_user u on c.teacher_id = u.id" +
+            " where c.status != '0' and c.status != '4'" +
+            "<if test='c.courseName != null'> and (c.course_name like concat('%',#{c.courseName},'%')" +
+            " or c.description like concat('%',#{c.courseName},'%')" +
+            " or u.real_name like concat('%',#{c.courseName},'%'))</if>" +
+            "<if test='c.teacherId != null'> and c.teacher_id = #{c.teacherId}</if>" +
+            "<if test='c.status != null'> and c.status = #{c.status}</if>" +
+            " and c.id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
+            " order by c.id</script>")
     List<Course> selectListExcludingStudent(@Param("c") Course course, @Param("studentId") Long studentId);
 
-    @Select("<script>select count(*) from tb_course where status != '0' and status != '4'" +
-            "<if test='c.courseName != null'> and (course_name like concat('%',#{c.courseName},'%') or description like concat('%',#{c.courseName},'%'))</if>" +
-            "<if test='c.teacherId != null'> and teacher_id = #{c.teacherId}</if>" +
-            "<if test='c.status != null'> and status = #{c.status}</if>" +
-            " and id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
+    @Select("<script>select count(*) from tb_course c left join tb_user u on c.teacher_id = u.id" +
+            " where c.status != '0' and c.status != '4'" +
+            "<if test='c.courseName != null'> and (c.course_name like concat('%',#{c.courseName},'%')" +
+            " or c.description like concat('%',#{c.courseName},'%')" +
+            " or u.real_name like concat('%',#{c.courseName},'%'))</if>" +
+            "<if test='c.teacherId != null'> and c.teacher_id = #{c.teacherId}</if>" +
+            "<if test='c.status != null'> and c.status = #{c.status}</if>" +
+            " and c.id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
             "</script>")
     long countListExcludingStudent(@Param("c") Course course, @Param("studentId") Long studentId);
 
-    @Select("<script>select * from tb_course where status != '0' and status != '4'" +
-            "<if test='c.courseName != null'> and (course_name like concat('%',#{c.courseName},'%') or description like concat('%',#{c.courseName},'%'))</if>" +
-            "<if test='c.teacherId != null'> and teacher_id = #{c.teacherId}</if>" +
-            "<if test='c.status != null'> and status = #{c.status}</if>" +
-            " and id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
-            " order by id limit #{offset}, #{size}</script>")
+    @Select("<script>select c.*, u.real_name as teacher_name from tb_course c left join tb_user u on c.teacher_id = u.id" +
+            " where c.status != '0' and c.status != '4'" +
+            "<if test='c.courseName != null'> and (c.course_name like concat('%',#{c.courseName},'%')" +
+            " or c.description like concat('%',#{c.courseName},'%')" +
+            " or u.real_name like concat('%',#{c.courseName},'%'))</if>" +
+            "<if test='c.teacherId != null'> and c.teacher_id = #{c.teacherId}</if>" +
+            "<if test='c.status != null'> and c.status = #{c.status}</if>" +
+            " and c.id not in (select course_id from tb_course_selection where student_id = #{studentId})" +
+            " order by c.id limit #{offset}, #{size}</script>")
     List<Course> selectPageExcludingStudent(@Param("c") Course course, @Param("studentId") Long studentId,
                                             @Param("offset") int offset, @Param("size") int size);
 
