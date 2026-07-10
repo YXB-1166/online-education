@@ -21,9 +21,18 @@ public interface NotificationMapper {
     @Select("select count(*) from tb_notification_read where notification_id = #{notificationId} and student_id = #{studentId}")
     int countRead(@Param("notificationId") Long notificationId, @Param("studentId") Long studentId);
 
-    @Select("<script>select * from tb_notification where course_id in " +
-            "(select course_id from tb_course_selection where student_id = #{studentId}) " +
-            "order by create_time desc</script>")
+    @Select("<script>select n.*, " +
+            "case when nr.id is not null then 1 else 0 end as is_read " +
+            "from tb_notification n " +
+            "left join tb_notification_read nr on n.id = nr.notification_id and nr.student_id = #{studentId} " +
+            "where n.course_id in (select course_id from tb_course_selection where student_id = #{studentId}) " +
+            "order by n.create_time desc</script>")
     List<Notification> selectByStudent(@Param("studentId") Long studentId);
+
+    @Select("select count(*) from tb_notification n " +
+            "left join tb_notification_read nr on n.id = nr.notification_id and nr.student_id = #{studentId} " +
+            "where n.course_id in (select course_id from tb_course_selection where student_id = #{studentId}) " +
+            "and nr.id is null")
+    int countUnreadByStudent(@Param("studentId") Long studentId);
 
 }

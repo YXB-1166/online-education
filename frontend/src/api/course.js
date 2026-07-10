@@ -124,6 +124,14 @@ export function getNotifications(studentId) {
   return request({ url: '/course/notifications', method: 'get', params: { studentId } })
 }
 
+export function getUnreadCount(studentId) {
+  return request({ url: '/course/notifications/unread-count', method: 'get', params: { studentId } })
+}
+
+export function markNotificationRead(notificationId, studentId) {
+  return request({ url: `/course/notification/${notificationId}/read`, method: 'put', params: { studentId } })
+}
+
 export function getCourseNotifications(courseId) {
   return request({ url: `/course/${courseId}/notifications`, method: 'get' })
 }

@@ -226,6 +226,17 @@ public class CourseService extends BaseService {
         return notificationMapper.selectByCourse(courseId);
     }
 
+    public void markNotificationRead(Long notificationId, Long studentId) {
+        if (notificationMapper.countRead(notificationId, studentId) == 0) {
+            notificationMapper.markRead(notificationId, studentId);
+            log.info("标记通知已读: notificationId={}, studentId={}", notificationId, studentId);
+        }
+    }
+
+    public int getUnreadCount(Long studentId) {
+        return notificationMapper.countUnreadByStudent(studentId);
+    }
+
     @Transactional
     public void approveSelection(Long id) {
         CourseSelection cs = selectionMapper.selectById(id);

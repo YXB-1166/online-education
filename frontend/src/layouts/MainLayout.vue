@@ -88,8 +88,11 @@
 
     <el-drawer v-model="showNotifPanel" title="课程通知" :size="380" direction="rtl" v-if="store.user?.role === 1">
       <div v-if="notifications.length === 0" style="text-align:center;color:#999;padding:40px 0">暂无通知</div>
-      <div v-for="n in notifications" :key="n.id" class="notif-item">
-        <div class="notif-title">{{ n.title }}</div>
+      <div v-for="n in notifications" :key="n.id" class="notif-item" :class="{ 'notif-unread': !n.isRead }" @click="markAsRead(n)">
+        <div class="notif-title">
+          <span v-if="!n.isRead" class="notif-dot" />
+          {{ n.title }}
+        </div>
         <div class="notif-content">{{ n.content }}</div>
         <div class="notif-time">{{ n.createTime }}</div>
       </div>
@@ -98,11 +101,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import AssistantChat from '../components/AssistantChat.vue'
-import { getNotifications } from '../api/course'
+import { getNotifications, getUnreadCount, markNotificationRead } from '../api/course'
 
 const route = useRoute()
 const router = useRouter()
@@ -110,15 +113,14 @@ const store = useUserStore()
 const isCollapse = ref(false)
 const showNotifPanel = ref(false)
 const notifications = ref([])
-
-const unreadCount = computed(() => notifications.value.length)
+const unreadCount = ref(0)
 
 let notifTimer = null
 
 onMounted(async () => {
   if (store.user?.role === 1) {
-    await loadNotifications()
-    notifTimer = setInterval(loadNotifications, 30000)
+    await Promise.all([loadNotifications(), loadUnreadCount()])
+    notifTimer = setInterval(() => { loadNotifications(); loadUnreadCount() }, 30000)
   }
 })
 
@@ -127,6 +129,21 @@ onUnmounted(() => { if (notifTimer) clearInterval(notifTimer) })
 async function loadNotifications() {
   try {
     notifications.value = await getNotifications(store.user.id)
+  } catch (_) {}
+}
+
+async function loadUnreadCount() {
+  try {
+    unreadCount.value = await getUnreadCount(store.user.id)
+  } catch (_) {}
+}
+
+async function markAsRead(n) {
+  if (n.isRead) return
+  try {
+    await markNotificationRead(n.id, store.user.id)
+    n.isRead = 1
+    unreadCount.value = Math.max(0, unreadCount.value - 1)
   } catch (_) {}
 }
 
@@ -264,6 +281,20 @@ function handleCommand(cmd) {
 .notif-item {
   padding: 12px 16px;
   border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.notif-item:hover { background: #f8fafc; }
+.notif-unread { background: #eef2ff; }
+.notif-unread:hover { background: #e0e7ff; }
+.notif-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #6366f1;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 .notif-title {
   font-weight: 600;

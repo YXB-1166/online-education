@@ -10,6 +10,7 @@ public class Notification implements Serializable {
     private String        title;
     private String        content;
     private LocalDateTime createTime;
+    private Integer       isRead;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -21,5 +22,7 @@ public class Notification implements Serializable {
     public void setContent(String content) { this.content = content; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    public Integer getIsRead() { return isRead; }
+    public void setIsRead(Integer isRead) { this.isRead = isRead; }
 
 }

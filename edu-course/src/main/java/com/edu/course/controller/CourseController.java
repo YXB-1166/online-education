@@ -182,6 +182,19 @@ public class CourseController {
         return Result.ok(courseService.getNotifications(studentId));
     }
 
+    @GetMapping("/notifications/unread-count")
+    @RequireRole(1)
+    public Result<Integer> unreadCount(@RequestParam Long studentId) {
+        return Result.ok(courseService.getUnreadCount(studentId));
+    }
+
+    @PutMapping("/notification/{notificationId}/read")
+    @RequireRole(1)
+    public Result<Void> markRead(@PathVariable Long notificationId, @RequestParam Long studentId) {
+        courseService.markNotificationRead(notificationId, studentId);
+        return Result.ok();
+    }
+
     @GetMapping("/{courseId}/notifications")
     @RequireRole({1, 2, 3})
     public Result<List<Notification>> courseNotifications(@PathVariable Long courseId) {
