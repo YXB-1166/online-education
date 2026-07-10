@@ -8,6 +8,14 @@
           <template #default="{ row }">{{ studentMap[row.studentId] || '未知' }}</template>
         </el-table-column>
         <el-table-column prop="content" label="提交内容" show-overflow-tooltip min-width="200" />
+        <el-table-column label="附件" width="100">
+          <template #default="{ row }">
+            <el-link v-if="row.attachmentUrl" type="primary" :href="row.attachmentUrl" target="_blank" :underline="false">
+              <el-icon style="vertical-align:middle;margin-right:2px"><Link /></el-icon>查看
+            </el-link>
+            <span v-else style="color:#999">无</span>
+          </template>
+        </el-table-column>
         <el-table-column label="分数" width="80">
           <template #default="{ row }">
             <el-tag v-if="row.score != null" type="success" effect="dark" round>{{ row.score }}</el-tag>
@@ -43,6 +51,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Link } from '@element-plus/icons-vue'
 import { submissionPage, gradeSubmission, autoComment } from '../../api/exam'
 import { listUsers } from '../../api/user'
 
