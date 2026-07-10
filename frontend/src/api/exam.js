@@ -1,5 +1,11 @@
 import request from './request'
 
+export function uploadFile(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request({ url: '/submission/upload', method: 'post', data: formData })
+}
+
 export function listAssignments(params) {
   return request({ url: '/assignment/list', method: 'get', params })
 }
