@@ -20,19 +20,19 @@ public class SubmissionController {
     private SubmissionService submissionService;
 
     @GetMapping("/{id}")
-    @RequireRole({1, 2})
+    @RequireRole({1, 2, 3})
     public Result<Submission> getById(@PathVariable Long id) {
         return Result.ok(submissionService.findById(id));
     }
 
     @GetMapping("/list")
-    @RequireRole({1, 2})
+    @RequireRole({1, 2, 3})
     public Result<List<Submission>> list(Submission submission) {
         return Result.ok(submissionService.findList(submission));
     }
 
     @GetMapping("/page")
-    @RequireRole({1, 2})
+    @RequireRole({1, 2, 3})
     public Result<PageResult<Submission>> page(PageParam param, Submission submission) {
         return Result.ok(submissionService.page(param, submission));
     }

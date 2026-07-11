@@ -222,9 +222,8 @@ onUnmounted(() => {
 <style scoped>
 .assistant-btn-wrap {
   position: fixed;
-  left: 24px;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 24px;
+  right: 24px;
   z-index: 9999;
 }
 .assistant-wrap {

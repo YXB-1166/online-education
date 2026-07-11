@@ -46,4 +46,10 @@ public interface ForumPostMapper {
     @Update("update tb_forum_post set reply_count = reply_count + 1 where id = #{id}")
     int incrementReply(@Param("id") Long id);
 
+    @Update("update tb_forum_post set like_count = like_count + 1 where id = #{id}")
+    int incrementLike(@Param("id") Long id);
+
+    @Update("update tb_forum_post set like_count = like_count - 1 where id = #{id}")
+    int decrementLike(@Param("id") Long id);
+
 }

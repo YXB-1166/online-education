@@ -55,7 +55,20 @@
 
         <el-tabs v-model="tab" stretch class="login-tabs">
           <el-tab-pane label="登录" name="login">
-            <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-position="top" size="large" class="modern-form" @keyup.enter="handleLogin" @submit.prevent>
+              <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-position="top" size="large" class="modern-form" @keyup.enter="handleLogin" @submit.prevent>
+              <div class="quick-select-group">
+                <el-radio-group v-if="!isAdminMode" v-model="userFilter" size="small" @change="selectedUser=null;loginForm.username='';loginForm.password=''">
+                  <el-radio-button value="">全部</el-radio-button>
+                  <el-radio-button value="1">学生</el-radio-button>
+                  <el-radio-button value="2">教师</el-radio-button>
+                </el-radio-group>
+                <el-select ref="userSelectRef" v-model="selectedUser" filterable placeholder="快速切换账号..." :no-data-text="'暂无账号'" clearable @change="onUserSelect" @clear="loginForm.username='';loginForm.password=''">
+                  <el-option v-for="u in filteredUsers" :key="u.id" :label="`${u.realName}（${u.username}）${['','学生','教师','管理员'][u.role]||''}`" :value="u.id">
+                    <span>{{ u.realName }}（{{ u.username }}）</span>
+                    <span class="user-role-tag">{{ ['','学生','教师','管理员'][u.role]||'' }}</span>
+                  </el-option>
+                </el-select>
+              </div>
               <el-form-item label="账号" prop="username">
                 <el-input v-model="loginForm.username" autocomplete="username" placeholder="请输入账号" :prefix-icon="User" />
               </el-form-item>
@@ -125,7 +138,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Key, RefreshRight, ChatDotRound, Reading, DocumentChecked, DataAnalysis, Notebook, Aim, UserFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
-import { login, register } from '../../api/user'
+import { login, register, listUsers } from '../../api/user'
 
 const router = useRouter()
 const route = useRoute()
@@ -138,10 +151,40 @@ const loginLoading = ref(false)
 const regLoading = ref(false)
 const loginFormRef = ref(null)
 const regFormRef = ref(null)
+const userSelectRef = ref(null)
 const captchaCode = ref(generateCaptcha())
 
 const loginForm = reactive({ username: '', password: '', captcha: '' })
 const regForm = reactive({ username: '', realName: '', password: '', confirmPassword: '' })
+
+const users = ref([])
+const selectedUser = ref(null)
+const userFilter = ref('')
+
+async function fetchUsers() {
+  try {
+    const res = await listUsers()
+    users.value = res
+  } catch (_) {}
+}
+fetchUsers()
+
+const filteredUsers = computed(() => {
+  let list = users.value
+  if (userFilter.value) list = list.filter(u => String(u.role) === userFilter.value)
+  if (isAdminMode.value) list = list.filter(u => u.role === 3)
+  return list
+})
+
+function onUserSelect(userId) {
+  const u = users.value.find(u => u.id === userId)
+  if (u) {
+    loginForm.username = u.username
+    loginForm.password = '123456'
+    loginForm.captcha = captchaCode.value
+    selectedUser.value = userId
+  }
+}
 
 const loginRules = {
   username: [{ required: true, message: '账号不能为空', trigger: 'blur' }],
@@ -416,6 +459,11 @@ async function handleRegister() {
   transform: translateY(-1px);
 }
 .captcha-code .el-icon { font-size: 15px; letter-spacing: 0; }
+
+.quick-select-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.quick-select-group .el-radio-group { align-self: flex-start; }
+.quick-select-group .el-select { width: 100%; }
+.user-role-tag { float: right; color: #1677ff; font-size: 12px; font-weight: 600; }
 
 .form-options { display: flex; align-items: center; gap: 12px; margin: 2px 0 16px; }
 

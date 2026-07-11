@@ -36,40 +36,7 @@
         </el-card>
       </div>
 
-      <el-card style="margin-bottom:24px">
-        <template #header>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center;gap:8px;font-weight:600">
-              <el-icon><Document /></el-icon> 作业列表
-            </div>
-            <el-switch v-model="showUnfinishedOnly" active-text="仅显示未完成" size="small" />
-          </div>
-        </template>
-        <el-table :data="filteredAssignments" stripe v-if="filteredAssignments.length > 0">
-          <el-table-column prop="id" label="ID" width="60" />
-          <el-table-column prop="title" label="标题" />
-          <el-table-column prop="fullScore" label="满分" width="80" />
-          <el-table-column prop="deadline" label="截止时间" width="180" />
-          <el-table-column label="状态" width="100">
-            <template #default="{ row }">
-              <el-tag v-if="submissionMap[row.id]" type="success" size="small" round>已提交</el-tag>
-              <el-tag v-else type="info" size="small" round>未提交</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="120">
-            <template #default="{ row }">
-              <el-button v-if="btnInfo(row).show" :type="btnInfo(row).type" size="small" :disabled="btnInfo(row).disabled" @click="$router.push(`/courses/${course.id}/assignments/${row.id}/submit`)" round>
-                {{ btnInfo(row).text }}
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-        <div v-else style="text-align:center;padding:40px 0;color:#94a3b8">
-          {{ showUnfinishedOnly ? '所有作业已完成' : '暂无作业' }}
-        </div>
-      </el-card>
-
-      <el-card>
+      <el-card style="margin-bottom:24px" v-if="course && String(course.status) !== '1'">
         <template #header>
           <div style="display:flex;align-items:center;gap:8px;font-weight:600">
             <el-icon><Reading /></el-icon> 课程资料
@@ -79,7 +46,33 @@
         <el-button type="primary" @click="$router.push('/courses/' + course.id + '/materials')" round>查看资料</el-button>
       </el-card>
 
-      <el-card style="margin-top:24px">
+      <el-card v-if="course && String(course.status) === '3'" style="margin-bottom:24px">
+        <template #header>
+          <div style="display:flex;align-items:center;gap:8px;font-weight:600">
+            <el-icon><DataAnalysis /></el-icon> 最终成绩
+          </div>
+        </template>
+        <el-skeleton :loading="gradeLoading" animated>
+          <div v-if="finalGrade !== null" class="grade-result">
+            <div class="grade-big">{{ finalGrade }}</div>
+            <div class="grade-label">总评</div>
+            <el-divider style="margin:16px 0" />
+            <div class="grade-detail">
+              <div class="grade-item">
+                <span class="grade-item-label">平时作业（占比 {{ course.homeworkRatio }}%）</span>
+                <span class="grade-item-value">{{ homeworkAvg }} / 100</span>
+              </div>
+              <div class="grade-item">
+                <span class="grade-item-label">期末考试（占比 {{ course.examRatio }}%）</span>
+                <span class="grade-item-value">{{ examScore ?? '未考试' }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else style="text-align:center;padding:20px;color:#94a3b8">成绩尚未出，请等待教师批改</div>
+        </el-skeleton>
+      </el-card>
+
+      <el-card v-if="course && String(course.status) !== '1'" style="margin-top:24px">
         <template #header>
           <div style="display:flex;align-items:center;gap:8px;font-weight:600">
             <el-icon><ChatDotSquare /></el-icon> 课程论坛
@@ -94,73 +87,85 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
 import { getCourse } from '../../api/course'
-import { listAssignments, listSubmissions, listResubmitOpportunities } from '../../api/exam'
 import { listUsers } from '../../api/user'
 import { listMaterialsWithStatus } from '../../api/material'
+import { listAssignments, listSubmissions } from '../../api/exam'
+import { getMyExamRecords, examPage } from '../../api/exam-online'
+import { DataAnalysis, Reading, ChatDotSquare } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const store = useUserStore()
 const course = ref(null)
-const assignments = ref([])
 const loading = ref(false)
 const teacher = ref(null)
-const submissionMap = ref({})
-const makeupMap = ref({})
-const showUnfinishedOnly = ref(false)
 const materialStatus = ref([])
-
-const filteredAssignments = computed(() => {
-  if (!showUnfinishedOnly.value) return assignments.value
-  return assignments.value.filter(a => !submissionMap.value[a.id])
-})
+const gradeLoading = ref(false)
+const homeworkAvg = ref(null)
+const examScore = ref(null)
+const finalGrade = ref(null)
 
 const unfinishedMaterialCount = computed(() => {
   return materialStatus.value.filter(m => m.completed === 0).length
 })
 
-function btnInfo(row) {
-  const sub = submissionMap.value[row.id]
-  const submitted = !!sub
-  const submitCount = sub?.submitCount || 0
-  const maxCount = row.allowSubmitCount || 1
-  const deadlinePassed = row.deadline && new Date(row.deadline) < new Date()
-  const hasMakeup = makeupMap.value[row.id] && new Date(makeupMap.value[row.id].deadline) > new Date()
-  if (!submitted && deadlinePassed && !hasMakeup) return { show: false }
-  if (!submitted && deadlinePassed && hasMakeup) return { show: true, text: '补交', type: 'warning', disabled: false }
-  if (!submitted) return { show: true, text: '提交', type: 'primary', disabled: false }
-  if (submitted && deadlinePassed && hasMakeup) return { show: true, text: '补交', type: 'warning', disabled: false }
-  if (submitted && deadlinePassed && !hasMakeup) return { show: false }
-  if (submitted && !deadlinePassed) {
-    if (maxCount === 1) return { show: false, text: '已提交', type: 'info', disabled: true }
-    if (submitCount >= maxCount) return { show: false }
-    return { show: true, text: '再次提交', type: 'primary', disabled: false }
-  }
-  return { show: false }
-}
-
 onMounted(async () => {
   loading.value = true
   course.value = await getCourse(route.params.id)
-  assignments.value = await listAssignments({ courseId: route.params.id })
   const users = await listUsers()
   teacher.value = users.find(u => u.id === course.value.teacherId) || null
-  const subs = await listSubmissions({ studentId: store.user.id })
-  const map = {}
-  subs.forEach(s => { map[s.assignmentId] = s })
-  submissionMap.value = map
   try {
     materialStatus.value = await listMaterialsWithStatus(route.params.id, store.user.id)
   } catch (_) {}
-  try {
-    const opps = await listResubmitOpportunities(store.user.id)
-    const mm = {}
-    opps.forEach(o => { mm[o.assignmentId] = o })
-    makeupMap.value = mm
-  } catch (_) {}
   loading.value = false
+
+  if (String(course.value.status) === '3') {
+    loadFinalGrade()
+  }
 })
+
+async function loadFinalGrade() {
+  gradeLoading.value = true
+  const c = course.value
+  try {
+    const [assignments, subs, examRecords, examPageRes] = await Promise.all([
+      listAssignments({ courseId: c.id }).catch(() => []),
+      listSubmissions({ studentId: store.user.id }).catch(() => []),
+      getMyExamRecords(store.user.id).catch(() => []),
+      examPage({ courseId: c.id, pageNum: 1, pageSize: 200 }).catch(() => ({ list: [] }))
+    ])
+    const subMap = {}
+    subs.forEach(s => { subMap[s.assignmentId] = s })
+
+    let totalScore = 0, totalFull = 0
+    for (const a of assignments) {
+      const s = subMap[a.id]
+      if (s && s.score != null) {
+        totalScore += s.score
+        totalFull += a.fullScore || 100
+      }
+    }
+    homeworkAvg.value = totalFull > 0 ? Math.round(totalScore / totalFull * 100) : 0
+
+    const courseExams = examPageRes.list || []
+    const courseExamIds = new Set(courseExams.map(e => e.id))
+    const matchedRecord = examRecords.find(r => courseExamIds.has(r.examId))
+    examScore.value = matchedRecord?.score ?? null
+
+    const hr = c.homeworkRatio || 50
+    const er = c.examRatio || 50
+    if (examScore.value != null) {
+      finalGrade.value = Math.round(homeworkAvg.value * hr / 100 + examScore.value * er / 100)
+    } else if (hr === 100) {
+      finalGrade.value = homeworkAvg.value
+    } else {
+      finalGrade.value = null
+    }
+  } catch (_) {}
+  gradeLoading.value = false
+}
 </script>
 
 <style scoped>
@@ -183,4 +188,11 @@ onMounted(async () => {
   font-weight: 700;
   flex-shrink: 0;
 }
+.grade-result { text-align: center; padding: 8px 0; }
+.grade-big { font-size: 48px; font-weight: 800; color: #4f46e5; }
+.grade-label { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+.grade-detail { display: flex; flex-direction: column; gap: 8px; }
+.grade-item { display: flex; justify-content: space-between; font-size: 14px; padding: 0 20px; }
+.grade-item-label { color: #64748b; }
+.grade-item-value { font-weight: 600; color: #1e293b; }
 </style>

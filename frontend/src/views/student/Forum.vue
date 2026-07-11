@@ -8,20 +8,27 @@
     </div>
 
     <el-card v-for="p in posts" :key="p.id" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <el-avatar :size="36" style="background:linear-gradient(135deg,#667eea,#764ba2)">
-          {{ userMap[p.userId]?.charAt(0) || '?' }}
-        </el-avatar>
-        <div>
-          <div style="font-weight:600">{{ p.title }}</div>
-          <div style="font-size:12px;color:#94a3b8">
-            {{ userMap[p.userId] || '未知' }} · {{ p.createTime }}
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <el-avatar :size="36" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+            {{ userMap[p.userId]?.charAt(0) || '?' }}
+          </el-avatar>
+          <div>
+            <div style="font-weight:600">{{ p.title }}</div>
+            <div style="font-size:12px;color:#94a3b8">
+              {{ userMap[p.userId] || '未知' }} · {{ p.createTime }}
+            </div>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+            <span style="font-size:13px;color:#94a3b8">{{ p.replyCount }} 条回复</span>
+            <el-button size="small" :type="p.liked ? 'danger' : 'default'" plain circle @click="handleLike(p)" style="font-size:16px;line-height:1">
+              {{ p.liked ? '\u2665' : '\u2661' }}
+            </el-button>
+            <span v-if="p.likeCount" style="font-size:12px;color:#94a3b8;margin-left:-8px">{{ p.likeCount }}</span>
+            <el-button size="small" plain @click="toggleReplies(p)" round>
+              {{ p.showReplies ? '收起回复' : '回复' }}
+            </el-button>
           </div>
         </div>
-        <el-button size="small" text style="margin-left:auto" @click="toggleReplies(p)">
-          {{ p.showReplies ? '收起回复' : p.replyCount + ' 条回复' }}
-        </el-button>
-      </div>
       <p style="color:#475569;margin:0 0 12px 48px;white-space:pre-wrap">{{ p.content }}</p>
 
       <div v-if="p.showReplies" style="margin-left:48px;padding:12px;background:#f8fafc;border-radius:8px">
@@ -72,7 +79,7 @@ import { ref, onMounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
-import { forumPostPage, addForumPost, getForumReplies, addForumReply } from '../../api/course'
+import { forumPostPage, addForumPost, getForumReplies, addForumReply, toggleLike } from '../../api/course'
 import { listUsers } from '../../api/user'
 
 const route = useRoute()
@@ -100,16 +107,27 @@ onMounted(async () => {
 
 async function fetchData() {
   loading.value = true
-  const res = await forumPostPage({ courseId: route.params.id, pageNum: pageNum.value, pageSize })
+  const res = await forumPostPage({ courseId: route.params.id, pageNum: pageNum.value, pageSize, userId: store.user.id })
   posts.value = res.list.map(p => ({ ...p, showReplies: false, replies: null, replyContent: '' }))
   total.value = res.total
   loading.value = false
+}
+
+async function handleLike(p) {
+  try {
+    const liked = await toggleLike(p.id, store.user.id)
+    p.liked = liked
+    p.likeCount = (p.likeCount || 0) + (liked ? 1 : -1)
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
 }
 
 async function toggleReplies(p) {
   p.showReplies = !p.showReplies
   if (p.showReplies && !p.replies) {
     p.replies = await getForumReplies(p.id)
+    p.replyCount = p.replies.length
   }
 }
 
@@ -119,7 +137,7 @@ async function handleReply(p) {
   ElMessage.success('回复成功')
   p.replyContent = ''
   p.replies = await getForumReplies(p.id)
-  p.replyCount = (p.replyCount || 0) + 1
+  p.replyCount = p.replies.length
 }
 
 async function handleAddPost() {

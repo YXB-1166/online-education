@@ -2,10 +2,12 @@ package com.edu.course.service;
 
 import com.edu.common.entity.ForumPost;
 import com.edu.common.entity.ForumReply;
+import com.edu.common.entity.ForumLike;
 import com.edu.common.page.PageParam;
 import com.edu.common.page.PageResult;
 import com.edu.common.result.BusinessException;
 import com.edu.common.service.BaseService;
+import com.edu.course.mapper.ForumLikeMapper;
 import com.edu.course.mapper.ForumPostMapper;
 import com.edu.course.mapper.ForumReplyMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class ForumPostService extends BaseService {
 
     @Autowired
     private ForumReplyMapper forumReplyMapper;
+
+    @Autowired
+    private ForumLikeMapper forumLikeMapper;
 
     public ForumPost findById(Long id) {
         ForumPost post = forumPostMapper.selectById(id);
@@ -82,5 +87,32 @@ public class ForumPostService extends BaseService {
     public void deleteReply(Long id) {
         forumReplyMapper.deleteById(id);
         log.info("删除回复: id={}", id);
+    }
+
+    public boolean toggleLike(Long postId, Long userId) {
+        if (forumLikeMapper.exists(postId, userId) > 0) {
+            forumLikeMapper.deleteByPostIdAndUserId(postId, userId);
+            forumPostMapper.decrementLike(postId);
+            log.info("取消点赞: postId={}, userId={}", postId, userId);
+            return false;
+        } else {
+            ForumLike like = new ForumLike();
+            like.setPostId(postId);
+            like.setUserId(userId);
+            forumLikeMapper.insert(like);
+            forumPostMapper.incrementLike(postId);
+            log.info("点赞: postId={}, userId={}", postId, userId);
+            return true;
+        }
+    }
+
+    public boolean isLiked(Long postId, Long userId) {
+        return forumLikeMapper.exists(postId, userId) > 0;
+    }
+
+    public ForumPost findByIdWithLike(Long id, Long userId) {
+        ForumPost post = findById(id);
+        post.setLiked(isLiked(id, userId));
+        return post;
     }
 }

@@ -17,7 +17,7 @@ public class UserApp {
     @Bean
     public FilterRegistrationBean<JwtAuthFilter> jwtFilter() {
         FilterRegistrationBean<JwtAuthFilter> bean = new FilterRegistrationBean<>();
-        bean.setFilter(new JwtAuthFilter("/user/login"));
+        bean.setFilter(new JwtAuthFilter("/user/login", "/user/list"));
         bean.addUrlPatterns("/user/*");
         bean.setOrder(1);
         return bean;

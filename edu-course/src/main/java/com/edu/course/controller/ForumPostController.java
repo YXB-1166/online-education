@@ -22,20 +22,38 @@ public class ForumPostController {
 
     @GetMapping("/{id}")
     @RequireRole({1, 2})
-    public Result<ForumPost> getById(@PathVariable Long id) {
+    public Result<ForumPost> getById(@PathVariable Long id,
+                                     @RequestParam(required = false) Long userId) {
+        if (userId != null) {
+            return Result.ok(forumPostService.findByIdWithLike(id, userId));
+        }
         return Result.ok(forumPostService.findById(id));
     }
 
     @GetMapping("/list")
     @RequireRole({1, 2})
-    public Result<List<ForumPost>> list(ForumPost forumPost) {
-        return Result.ok(forumPostService.findList(forumPost));
+    public Result<List<ForumPost>> list(ForumPost forumPost,
+                                        @RequestParam(required = false) Long userId) {
+        List<ForumPost> list = forumPostService.findList(forumPost);
+        if (userId != null) {
+            for (ForumPost p : list) {
+                p.setLiked(forumPostService.isLiked(p.getId(), userId));
+            }
+        }
+        return Result.ok(list);
     }
 
     @GetMapping("/page")
     @RequireRole({1, 2})
-    public Result<PageResult<ForumPost>> page(PageParam param, ForumPost forumPost) {
-        return Result.ok(forumPostService.page(param, forumPost));
+    public Result<PageResult<ForumPost>> page(PageParam param, ForumPost forumPost,
+                                               @RequestParam(required = false) Long userId) {
+        PageResult<ForumPost> result = forumPostService.page(param, forumPost);
+        if (userId != null) {
+            for (ForumPost p : result.getList()) {
+                p.setLiked(forumPostService.isLiked(p.getId(), userId));
+            }
+        }
+        return Result.ok(result);
     }
 
     @PostMapping
@@ -77,5 +95,13 @@ public class ForumPostController {
     public Result<Void> deleteReply(@PathVariable Long id) {
         forumPostService.deleteReply(id);
         return Result.ok();
+    }
+
+    @PostMapping("/{id}/like")
+    @RequireRole({1, 2})
+    public Result<Boolean> toggleLike(@PathVariable Long id,
+                                       @RequestParam Long userId) {
+        boolean liked = forumPostService.toggleLike(id, userId);
+        return Result.ok(liked);
     }
 }

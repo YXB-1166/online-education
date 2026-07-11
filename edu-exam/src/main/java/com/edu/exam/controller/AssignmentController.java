@@ -22,19 +22,19 @@ public class AssignmentController {
     private AssignmentService assignmentService;
 
     @GetMapping("/{id}")
-    @RequireRole({1, 2})
+    @RequireRole({1, 2, 3})
     public Result<Assignment> getById(@PathVariable Long id) {
         return Result.ok(assignmentService.findById(id));
     }
 
     @GetMapping("/list")
-    @RequireRole({1, 2})
+    @RequireRole({1, 2, 3})
     public Result<List<Assignment>> list(Assignment assignment) {
         return Result.ok(assignmentService.findList(assignment));
     }
 
     @GetMapping("/page")
-    @RequireRole({1, 2})
+    @RequireRole({1, 2, 3})
     public Result<PageResult<Assignment>> page(PageParam param, Assignment assignment) {
         return Result.ok(assignmentService.page(param, assignment));
     }
@@ -62,7 +62,7 @@ public class AssignmentController {
     }
 
     @GetMapping("/resubmit-opportunities")
-    @RequireRole({1, 2})
+    @RequireRole({1, 2, 3})
     public Result<List<ResubmitOpportunity>> resubmitOpportunities(@RequestParam Long studentId) {
         return Result.ok(assignmentService.getResubmitOpportunities(studentId));
     }

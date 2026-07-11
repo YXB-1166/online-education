@@ -48,7 +48,6 @@ public class UserController {
     }
 
     @GetMapping("/list")
-    @RequireRole({1, 2, 3})
     public Result<List<User>> list(User user) {
         return Result.ok(userService.findList(user));
     }

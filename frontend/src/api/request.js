@@ -20,7 +20,9 @@ request.interceptors.response.use(
     if (code === 200) {
       return data
     }
-    ElMessage.error(message || '请求失败')
+    if (!res.config?.silent) {
+      ElMessage.error(message || '请求失败')
+    }
     return Promise.reject(new Error(message))
   },
   (err) => {
@@ -30,7 +32,9 @@ request.interceptors.response.use(
       window.location.href = '/login'
       return Promise.reject(err)
     }
-    ElMessage.error(err.message || '网络错误')
+    if (!err.config?.silent) {
+      ElMessage.error(err.message || '网络错误')
+    }
     return Promise.reject(err)
   }
 )

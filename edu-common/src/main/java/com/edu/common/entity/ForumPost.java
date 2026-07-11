@@ -20,6 +20,8 @@ public class ForumPost implements Serializable {
 
     private String        content;
     private Integer       replyCount;
+    private Integer       likeCount;
+    private Boolean       liked;
     private Integer       status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
@@ -36,6 +38,10 @@ public class ForumPost implements Serializable {
     public void setContent(String content) { this.content = content; }
     public Integer getReplyCount() { return replyCount; }
     public void setReplyCount(Integer replyCount) { this.replyCount = replyCount; }
+    public Integer getLikeCount() { return likeCount; }
+    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
+    public Boolean getLiked() { return liked; }
+    public void setLiked(Boolean liked) { this.liked = liked; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public LocalDateTime getCreateTime() { return createTime; }

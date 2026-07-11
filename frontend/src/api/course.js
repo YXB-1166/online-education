@@ -52,6 +52,10 @@ export function addForumReply(data) {
   return request({ url: '/forum/reply', method: 'post', data })
 }
 
+export function toggleLike(postId, userId) {
+  return request({ url: `/forum/${postId}/like`, method: 'post', params: { userId } })
+}
+
 export function coursePage(params) {
   return request({ url: '/course/page', method: 'get', params })
 }

@@ -15,8 +15,11 @@
         <el-menu-item v-if="store.user?.role === 1" index="/my-courses">
           <el-icon><Notebook /></el-icon><span>我的课程</span>
         </el-menu-item>
-        <el-menu-item v-if="store.user?.role === 1" index="/my-grades">
-          <el-icon><Document /></el-icon><span>我的成绩</span>
+        <el-menu-item v-if="store.user?.role === 1" index="/my-assignments">
+          <el-icon><Edit /></el-icon><span>我的作业</span>
+        </el-menu-item>
+        <el-menu-item v-if="store.user?.role === 1" index="/my-exams">
+          <el-icon><Tickets /></el-icon><span>在线考试</span>
         </el-menu-item>
         <el-menu-item v-if="store.user?.role === 1" index="/learning-progress">
           <el-icon><TrendCharts /></el-icon><span>学习进度</span>
@@ -116,7 +119,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import AssistantChat from '../components/AssistantChat.vue'
 import { getNotifications, getUnreadCount, markNotificationRead } from '../api/course'
-import { Plus, Finished, DataAnalysis } from '@element-plus/icons-vue'
+import { Plus, Finished, DataAnalysis, Edit, Tickets } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
