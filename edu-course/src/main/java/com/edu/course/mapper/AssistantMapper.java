@@ -78,7 +78,8 @@ public interface AssistantMapper {
             "order by s.submit_time desc")
     List<Map<String, Object>> ungradedSubmissions(@Param("teacherId") Long teacherId);
 
-    @Select("select c.id as courseId, c.course_name, c.credit, " +
+    @Select("select c.id as courseId, c.course_name, c.credit, c.status as courseStatus, " +
+            "cs.status as selectionStatus, cs.score as finalScore, " +
             "(select count(*) from tb_assignment where course_id = c.id) as totalAssignments, " +
             "(select count(*) from tb_submission s join tb_assignment a on s.assignment_id = a.id " +
             " where a.course_id = c.id and s.student_id = #{studentId}) as submittedCount, " +
@@ -90,7 +91,8 @@ public interface AssistantMapper {
             " where a.course_id = c.id and s.student_id = #{studentId} and s.score is not null and s.score < 60) as below60Count " +
             "from tb_course_selection cs " +
             "join tb_course c on cs.course_id = c.id " +
-            "where cs.student_id = #{studentId} and cs.status = '1'")
+            "where cs.student_id = #{studentId} and cs.status in ('1','3') " +
+            "order by cs.status, c.course_name")
     List<Map<String, Object>> learningProgress(@Param("studentId") Long studentId);
 
     @Select("select count(*) from tb_assignment where course_id = #{courseId}")

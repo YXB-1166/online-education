@@ -12,12 +12,20 @@
     </template>
 
     <template v-else>
+      <div style="margin-bottom:16px">
+        <el-radio-group v-model="filter" size="small">
+          <el-radio-button value="all">全部 ({{ progress.length }})</el-radio-button>
+          <el-radio-button value="active">授课中 ({{ activeCount }})</el-radio-button>
+          <el-radio-button value="completed">已结课 ({{ completedCount }})</el-radio-button>
+        </el-radio-group>
+      </div>
+
       <el-row :gutter="20">
-        <el-col v-for="p in progress" :key="p.courseId" :xs="24" :sm="12" :lg="8" style="margin-bottom:20px">
-          <el-card :class="{ 'risk-card': p.risk }" shadow="hover">
+        <el-col v-for="p in filteredList" :key="p.courseId" :xs="24" :sm="12" :lg="8" style="margin-bottom:20px">
+          <el-card :class="{ 'risk-card': p.risk && p.selectionStatus !== '3', 'completed-card': p.selectionStatus === '3' }" shadow="hover">
             <div class="card-header">
               <div class="course-identity">
-                <div class="course-avatar">{{ p.course_name.charAt(0) }}</div>
+                <div class="course-avatar" :class="{ 'avatar-completed': p.selectionStatus === '3' }">{{ p.course_name.charAt(0) }}</div>
                 <div>
                   <div class="course-name">{{ p.course_name }}</div>
                   <div class="course-meta">
@@ -26,50 +34,78 @@
                   </div>
                 </div>
               </div>
-              <el-tag v-if="p.risk" type="danger" effect="dark" size="small">⚠️ 挂科风险</el-tag>
+              <el-tag v-if="p.selectionStatus === '3'" type="success" effect="dark" size="small">已结课</el-tag>
+              <el-tag v-else-if="p.risk" type="danger" effect="dark" size="small">⚠️ 挂科风险</el-tag>
             </div>
 
-            <div class="stat-row">
-              <div class="stat-item">
-                <div class="stat-value">{{ p.totalAssignments }}</div>
-                <div class="stat-label">总作业数</div>
+            <template v-if="p.selectionStatus === '3'">
+              <div class="final-score-section">
+                <div class="final-label">最终成绩</div>
+                <div class="final-score" :class="finalScoreClass(p.finalScore)">{{ p.finalScore != null ? p.finalScore : '未出' }}</div>
               </div>
-              <div class="stat-item">
-                <div class="stat-value">{{ p.submittedCount }}</div>
-                <div class="stat-label">已提交</div>
+              <div class="stat-row" style="margin-top:12px">
+                <div class="stat-item">
+                  <div class="stat-value">{{ p.totalAssignments }}</div>
+                  <div class="stat-label">总作业数</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ p.submittedCount }}</div>
+                  <div class="stat-label">已提交</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ p.gradedCount }}</div>
+                  <div class="stat-label">已批改</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value" :class="avgClass(p.avgScore)">{{ p.avgScore.toFixed(1) }}</div>
+                  <div class="stat-label">平均分</div>
+                </div>
               </div>
-              <div class="stat-item">
-                <div class="stat-value">{{ p.gradedCount }}</div>
-                <div class="stat-label">已批改</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value" :class="avgClass(p.avgScore)">{{ p.avgScore.toFixed(1) }}</div>
-                <div class="stat-label">平均分</div>
-              </div>
-            </div>
+            </template>
 
-            <div style="margin-top:12px">
-              <div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8">
-                <span>作业提交进度</span>
-                <span>{{ p.submittedCount }}/{{ p.totalAssignments }}</span>
+            <template v-else>
+              <div class="stat-row">
+                <div class="stat-item">
+                  <div class="stat-value">{{ p.totalAssignments }}</div>
+                  <div class="stat-label">总作业数</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ p.submittedCount }}</div>
+                  <div class="stat-label">已提交</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ p.gradedCount }}</div>
+                  <div class="stat-label">已批改</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value" :class="avgClass(p.avgScore)">{{ p.avgScore.toFixed(1) }}</div>
+                  <div class="stat-label">平均分</div>
+                </div>
               </div>
-              <el-progress :percentage="submitPercent(p)" :stroke-width="8"
-                :color="p.submittedCount === p.totalAssignments ? '#22c55e' : '#6366f1'"
-                style="margin-top:4px" />
-            </div>
 
-            <div v-if="p.missedCount > 0" class="warning-item">
-              <el-icon color="#eab308"><WarningFilled /></el-icon>
-              <span>{{ p.missedCount }} 份作业未提交</span>
-            </div>
-            <div v-if="p.below60Count > 0" class="warning-item danger">
-              <el-icon color="#ef4444"><WarningFilled /></el-icon>
-              <span>{{ p.below60Count }} 次作业低于60分</span>
-            </div>
-            <div v-if="p.avgScore > 0 && p.avgScore < 60 && p.gradedCount >= p.totalAssignments / 2" class="warning-item danger">
-              <el-icon color="#ef4444"><CircleCloseFilled /></el-icon>
-              <span>挂科风险高，请及时复习！</span>
-            </div>
+              <div style="margin-top:12px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8">
+                  <span>作业提交进度</span>
+                  <span>{{ p.submittedCount }}/{{ p.totalAssignments }}</span>
+                </div>
+                <el-progress :percentage="submitPercent(p)" :stroke-width="8"
+                  :color="p.submittedCount === p.totalAssignments ? '#22c55e' : '#6366f1'"
+                  style="margin-top:4px" />
+              </div>
+
+              <div v-if="p.missedCount > 0" class="warning-item">
+                <el-icon color="#eab308"><WarningFilled /></el-icon>
+                <span>{{ p.missedCount }} 份作业未提交</span>
+              </div>
+              <div v-if="p.below60Count > 0" class="warning-item danger">
+                <el-icon color="#ef4444"><WarningFilled /></el-icon>
+                <span>{{ p.below60Count }} 次作业低于60分</span>
+              </div>
+              <div v-if="p.avgScore > 0 && p.avgScore < 60 && p.gradedCount >= p.totalAssignments / 2" class="warning-item danger">
+                <el-icon color="#ef4444"><CircleCloseFilled /></el-icon>
+                <span>挂科风险高，请及时复习！</span>
+              </div>
+            </template>
           </el-card>
         </el-col>
       </el-row>
@@ -78,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { Loading, WarningFilled, CircleCloseFilled } from '@element-plus/icons-vue'
 import request from '../../api/request'
@@ -86,6 +122,17 @@ import request from '../../api/request'
 const store = useUserStore()
 const progress = ref([])
 const loading = ref(true)
+const filter = ref('all')
+
+const activeCount = computed(() => progress.value.filter(p => p.selectionStatus !== '3').length)
+const completedCount = computed(() => progress.value.filter(p => p.selectionStatus === '3').length)
+
+const filteredList = computed(() => {
+  if (filter.value === 'all') return progress.value
+  if (filter.value === 'active') return progress.value.filter(p => p.selectionStatus !== '3')
+  if (filter.value === 'completed') return progress.value.filter(p => p.selectionStatus === '3')
+  return progress.value
+})
 
 onMounted(async () => {
   try {
@@ -115,6 +162,14 @@ function avgClass(avg) {
   if (avg >= 70) return 'avg-good'
   if (avg >= 60) return 'avg-pass'
   if (avg === 0) return ''
+  return 'avg-fail'
+}
+
+function finalScoreClass(score) {
+  if (score == null) return ''
+  if (score >= 85) return 'avg-excellent'
+  if (score >= 70) return 'avg-good'
+  if (score >= 60) return 'avg-pass'
   return 'avg-fail'
 }
 </script>
@@ -197,5 +252,28 @@ function avgClass(avg) {
 }
 .risk-card {
   border: 2px solid #fca5a5 !important;
+}
+.completed-card {
+  border: 2px solid #bbf7d0 !important;
+}
+.avatar-completed {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+}
+.final-score-section {
+  text-align: center;
+  padding: 16px;
+  background: #f0fdf4;
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+.final-label {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.final-score {
+  font-size: 36px;
+  font-weight: 800;
+  color: #22c55e;
 }
 </style>
