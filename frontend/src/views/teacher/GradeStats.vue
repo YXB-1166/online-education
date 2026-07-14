@@ -11,6 +11,8 @@
 
     <template v-else-if="loading"><div style="text-align:center;padding:60px"><el-icon class="is-loading" :size="32"><Loading /></el-icon></div></template>
 
+    <template v-else-if="!stats || !stats.distribution"><el-empty description="暂无数据" /></template>
+
     <template v-else>
       <el-row :gutter="16" style="margin-bottom:16px">
         <el-col :span="4" v-for="s in statCards" :key="s.label">
@@ -35,7 +37,7 @@
               <el-button size="small" style="float:right" @click="doExport">导出 Excel</el-button>
             </template>
             <div style="max-height:400px;overflow-y:auto">
-              <div v-for="s in stats.students" :key="s.studentId" class="student-grade-row">
+              <div v-for="s in stats.students || []" :key="s.studentId" class="student-grade-row">
                 <span>{{ s.studentName }}</span>
                 <el-tag :type="gradeTag(s.finalScore)" size="small">{{ s.finalScore ?? '未出' }}</el-tag>
               </div>
@@ -76,20 +78,23 @@ const statCards = computed(() => [
   { label: '最低分', value: stats.value.minScore ?? 0 },
 ])
 
-const chartOption = computed(() => ({
-  tooltip: { trigger: 'axis' },
-  grid: { left: 60, right: 20, top: 30, bottom: 30 },
-  xAxis: { type: 'category', data: Object.keys(stats.value.distribution) },
-  yAxis: { type: 'value' },
-  series: [{
-    type: 'bar',
-    data: Object.values(stats.value.distribution),
-    itemStyle: {
-      color: params => ['#22c55e','#6366f1','#eab308','#f97316','#ef4444'][params.dataIndex]
-    },
-    barWidth: 40,
-  }],
-}))
+const chartOption = computed(() => {
+  const dist = stats.value?.distribution || {}
+  return {
+    tooltip: { trigger: 'axis' },
+    grid: { left: 60, right: 20, top: 30, bottom: 30 },
+    xAxis: { type: 'category', data: Object.keys(dist) },
+    yAxis: { type: 'value' },
+    series: [{
+      type: 'bar',
+      data: Object.values(dist),
+      itemStyle: {
+        color: params => ['#22c55e','#6366f1','#eab308','#f97316','#ef4444'][params.dataIndex]
+      },
+      barWidth: 40,
+    }],
+  }
+})
 
 function gradeTag(score) {
   if (score == null) return 'info'
@@ -104,7 +109,8 @@ async function loadStats() {
   if (!courseId.value) return
   loading.value = true
   try {
-    stats.value = await getGradeStats(courseId.value)
+    const d = await getGradeStats(courseId.value)
+    if (d && d.distribution) stats.value = d
   } finally { loading.value = false }
 }
 

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="page-title">课程日程</div>
 
@@ -24,18 +24,16 @@
 
     <el-card shadow="hover" class="cal-card">
       <table class="cal-table" v-if="viewMode === 'month'">
-        <thead><tr><th v-for="d in weekDays" :key="d">{{ d }}</th></tr></thead>
+        <thead><tr><th v-for="d in weekLabels" :key="d">{{ d }}</th></tr></thead>
         <tbody>
           <tr v-for="(row, ri) in monthGrid" :key="ri">
             <td v-for="(cell, ci) in row" :key="ci"
-              :class="{ 'cal-other': !cell.isCurrent, 'cal-today': cell.isToday }">
+              :class="{ 'cal-other': !cell.current, 'cal-today': cell.today }">
               <div class="cal-cell-header">{{ cell.day }}</div>
               <div class="cal-events">
                 <div v-for="ev in cell.events" :key="ev.id"
                   class="cal-event" :class="'ev-' + ev.eventType"
-                  @click.stop="goTo(ev)">
-                  {{ ev.title }}
-                </div>
+                  @click.stop="goTo(ev)">{{ ev.short }}</div>
               </div>
             </td>
           </tr>
@@ -43,20 +41,17 @@
       </table>
 
       <div class="week-view" v-else>
-        <div v-for="(day, di) in weekDaysData" :key="di" class="week-col"
-          :class="{ 'cal-today': isSameDay(day.date, new Date()) }">
+        <div v-for="(col, ci) in weekCols" :key="ci" class="week-col" :class="{ 'cal-today': col.today }">
           <div class="week-col-header">
-            <div class="week-day-name">{{ day.label }}</div>
-            <div class="week-date-num">{{ day.date.getDate() }}</div>
+            <div class="week-day-name">{{ col.label }}</div>
+            <div class="week-date-num">{{ col.num }}</div>
           </div>
           <div class="week-events">
-            <div v-for="ev in day.events" :key="ev.id"
-              class="cal-event" :class="'ev-' + ev.eventType"
-              @click="goTo(ev)">
-              <div class="ev-title">{{ ev.title }}</div>
-              <div class="ev-time">{{ formatTime(ev) }}</div>
+            <div v-for="ev in col.events" :key="ev.id" class="cal-event" :class="'ev-' + ev.eventType" @click="goTo(ev)">
+              <div class="ev-title">{{ ev.short }}</div>
+              <div class="ev-time">{{ ev.timeRange }}</div>
             </div>
-            <div v-if="day.events.length === 0" class="week-empty">无日程</div>
+            <div v-if="col.events.length === 0" class="week-empty">无日程</div>
           </div>
         </div>
       </div>
@@ -74,119 +69,122 @@ import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 const store = useUserStore()
 const router = useRouter()
 const viewMode = ref('month')
-const baseDate = ref(new Date())
-const allEvents = ref([])
+const base = ref(todayStr())
+const events = ref([])
+const weekLabels = ['日', '一', '二', '三', '四', '五', '六']
 
-const weekDays = ['日', '一', '二', '三', '四', '五', '六']
-
+function todayStr() {
+  const d = new Date()
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+}
 function pad(n) { return n < 10 ? '0' + n : '' + n }
 
-function fmtDate(d) {
-  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+// Extract YYYY-MM-DD from any date format (ISO string, etc.)
+function dateKey(v) {
+  if (!v) return ''
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? m[1] + '-' + m[2] + '-' + m[3] : ''
+}
+// Extract HH:mm
+function hm(v) {
+  if (!v) return ''
+  const m = String(v).match(/T(\d{2}):(\d{2})/)
+  return m ? m[1] + ':' + m[2] : ''
 }
 
 const titleText = computed(() => {
-  const d = baseDate.value
-  if (viewMode.value === 'month') {
-    return d.getFullYear() + '年' + (d.getMonth() + 1) + '月'
-  }
-  const start = new Date(d)
-  start.setDate(start.getDate() - start.getDay())
-  const end = new Date(start)
+  const p = base.value.match(/^(\d{4})-(\d{2})/)
+  if (!p) return ''
+  if (viewMode.value === 'month') return p[1] + '\u5e74' + (+p[2]) + '\u6708'
+  const d = new Date(+p[1], +p[2] - 1, +base.value.slice(-2))
+  d.setDate(d.getDate() - d.getDay())
+  const end = new Date(d)
   end.setDate(end.getDate() + 6)
-  return fmtDate(start) + ' ~ ' + fmtDate(end)
+  return dateKey(d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())) +
+    ' ~ ' + dateKey(end.getFullYear() + '-' + pad(end.getMonth()+1) + '-' + pad(end.getDate()))
 })
 
-function isSameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
-}
-
 const monthGrid = computed(() => {
-  const d = new Date(baseDate.value)
-  const year = d.getFullYear()
-  const month = d.getMonth()
-  const first = new Date(year, month, 1)
-  const last = new Date(year, month + 1, 0)
-  const startDay = first.getDay()
-  const rows = []
-  let row = []
-  for (let i = 0; i < startDay; i++) {
-    const prev = new Date(year, month, -startDay + i + 1)
-    row.push({ day: prev.getDate(), isCurrent: false, isToday: false, events: [], date: prev })
+  const p = base.value.match(/^(\d{4})-(\d{2})/)
+  if (!p) return []
+  const y = +p[1], m = +p[2]
+  const first = new Date(y, m - 1, 1)
+  const last = new Date(y, m, 0)
+  const eventMap = groupEvents()
+  const rows = []; let row = []
+  for (let i = 0; i < first.getDay(); i++) {
+    const d = new Date(y, m - 1, 1 - first.getDay() + i)
+    const k = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+    row.push({ day: d.getDate(), current: false, today: false, events: eventMap[k] || [] })
   }
   for (let day = 1; day <= last.getDate(); day++) {
-    const date = new Date(year, month, day)
-    const today = isSameDay(date, new Date())
-    const evs = allEvents.value.filter(e => isSameDay(parseDate(e.start), date))
-    row.push({ day, isCurrent: true, isToday: today, events: evs, date })
+    const k = y + '-' + pad(m) + '-' + pad(day)
+    row.push({ day, current: true, today: k === todayStr(), events: eventMap[k] || [] })
     if (row.length === 7) { rows.push(row); row = [] }
   }
   if (row.length > 0) {
-    const remaining = 7 - row.length
-    for (let i = 1; i <= remaining; i++) {
-      const next = new Date(year, month + 1, i)
-      row.push({ day: next.getDate(), isCurrent: false, isToday: false, events: [], date: next })
+    for (let i = row.length; i < 7; i++) {
+      const d = new Date(y, m, i - row.length + 1)
+      const k = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+      row.push({ day: d.getDate(), current: false, today: false, events: eventMap[k] || [] })
     }
     rows.push(row)
   }
   return rows
 })
 
-const weekDaysData = computed(() => {
-  const d = new Date(baseDate.value)
-  const start = new Date(d)
-  start.setDate(start.getDate() - start.getDay())
-  return weekDays.map((label, i) => {
-    const date = new Date(start)
+const weekCols = computed(() => {
+  const p = base.value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!p) return []
+  const d = new Date(+p[1], +p[2] - 1, +p[3])
+  d.setDate(d.getDate() - d.getDay())
+  const eventMap = groupEvents()
+  return weekLabels.map((label, i) => {
+    const date = new Date(d)
     date.setDate(date.getDate() + i)
-    const evs = allEvents.value.filter(e => isSameDay(parseDate(e.start), date))
-    return { label, date, events: evs }
+    const k = date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate())
+    return { label, num: date.getDate(), today: k === todayStr(), events: eventMap[k] || [] }
   })
 })
 
-function parseDate(v) {
-  if (!v) return new Date()
-  if (typeof v === 'string') return new Date(v.replace(' ', 'T'))
-  return new Date(v)
+function groupEvents() {
+  const map = {}
+  events.value.forEach(e => {
+    const k = dateKey(e.start)
+    if (!k) return
+    if (!map[k]) map[k] = []
+    map[k].push(e)
+  })
+  return map
 }
 
-function formatTime(ev) {
-  if (!ev.endTime) return ''
-  const s = parseDate(ev.startTime)
-  const e = parseDate(ev.endTime)
-  return pad(s.getHours()) + ':' + pad(s.getMinutes()) + ' - ' + pad(e.getHours()) + ':' + pad(e.getMinutes())
+function modKey(dir) {
+  const p = base.value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!p) return base.value
+  const d = new Date(+p[1], +p[2] - 1, +p[3])
+  if (viewMode.value === 'month') d.setMonth(d.getMonth() + dir)
+  else d.setDate(d.getDate() + dir * 7)
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
 }
-
-function prev() {
-  const d = new Date(baseDate.value)
-  if (viewMode.value === 'month') d.setMonth(d.getMonth() - 1)
-  else d.setDate(d.getDate() - 7)
-  baseDate.value = d
-}
-
-function next() {
-  const d = new Date(baseDate.value)
-  if (viewMode.value === 'month') d.setMonth(d.getMonth() + 1)
-  else d.setDate(d.getDate() + 7)
-  baseDate.value = d
-}
-
-function today() { baseDate.value = new Date() }
-
+function prev() { base.value = modKey(-1) }
+function next() { base.value = modKey(1) }
+function today() { base.value = todayStr() }
 function goTo(ev) {
   if (ev.eventType === 'assignment') router.push('/my-assignments')
-  else if (ev.eventType === 'exam' || ev.eventType === 'courseExam') router.push('/my-exams')
+  else router.push('/my-exams')
 }
 
 onMounted(async () => {
   try {
     const data = await getCalendarEvents(store.user.id, store.user.role)
     if (data && data.length > 0) {
-      allEvents.value = data.map(e => ({
-        ...e,
+      events.value = data.map(e => ({
+        id: e.eventType + '-' + e.eventId,
         start: e.startTime,
         end: e.endTime,
-        eventType: e.eventType
+        eventType: e.eventType,
+        short: (e.courseName || '').slice(0, 4) + ' ' + e.title,
+        timeRange: e.endTime ? hm(e.startTime) + '-' + hm(e.endTime) : ''
       }))
     }
   } catch (_) {}
@@ -207,8 +205,7 @@ onMounted(async () => {
 .dot-course-exam { background: #f59e0b; }
 
 .cal-toolbar {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
 }
 .cal-nav { display: flex; align-items: center; gap: 12px; }
 .cal-title { font-size: 17px; font-weight: 700; color: #1e293b; min-width: 160px; text-align: center; }
@@ -223,15 +220,13 @@ onMounted(async () => {
 }
 .cal-table td {
   vertical-align: top; height: 100px; padding: 4px;
-  border: 1px solid #f1f5f9; cursor: pointer;
-  transition: background 0.15s;
+  border: 1px solid #f1f5f9; transition: background 0.15s;
 }
 .cal-table td:hover { background: #f8fafc; }
 .cal-table td.cal-other { opacity: 0.35; }
 .cal-table td.cal-today { background: #eff6ff; }
 .cal-cell-header {
-  font-size: 13px; font-weight: 500; color: #334155;
-  padding: 2px 4px; margin-bottom: 2px;
+  font-size: 13px; font-weight: 500; color: #334155; padding: 2px 4px; margin-bottom: 2px;
 }
 .cal-today .cal-cell-header {
   background: #1677ff; color: #fff; border-radius: 50%;
