@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { Loading } from '@element-plus/icons-vue'
 import VChart from 'vue-echarts'
@@ -108,15 +108,19 @@ function timeStr(t) {
 
 async function loadTrend() {
   if (!courseId.value) return
+  trendData.value = []
   loading.value = true
   try {
-    trendData.value = await getGradeTrend(courseId.value, store.user.id) || []
+    const d = await getGradeTrend(courseId.value, store.user.id)
+    if (d) trendData.value = d
   } finally { loading.value = false }
 }
 
+watch(courseId, loadTrend)
+
 onMounted(async () => {
   courses.value = (await myCourses(store.user.id)) || []
-  if (courses.value.length > 0) { courseId.value = courses.value[0].id; await loadTrend() }
+  if (courses.value.length > 0) { courseId.value = courses.value[0].id }
 })
 </script>
 
