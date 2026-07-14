@@ -24,6 +24,12 @@
         <el-menu-item v-if="store.user?.role === 1" index="/learning-progress">
           <el-icon><TrendCharts /></el-icon><span>学习进度</span>
         </el-menu-item>
+        <el-menu-item v-if="store.user?.role === 1" index="/grade-trend">
+          <el-icon><DataLine /></el-icon><span>成绩趋势</span>
+        </el-menu-item>
+        <el-menu-item v-if="store.user?.role === 1" index="/messages">
+          <el-icon><ChatDotSquare /></el-icon><span>站内信<small v-if="msgUnread > 0" class="msg-badge">{{ msgUnread }}</small></span>
+        </el-menu-item>
         <el-menu-item v-if="store.user?.role === 1" index="/student/profile">
           <el-icon><User /></el-icon><span>个人设置</span>
         </el-menu-item>
@@ -33,8 +39,14 @@
         <el-menu-item v-if="store.user?.role === 2" index="/teacher/courses/create">
           <el-icon><Plus /></el-icon><span>创建课程</span>
         </el-menu-item>
+        <el-menu-item v-if="store.user?.role === 2" index="/teacher/grade-stats">
+          <el-icon><DataAnalysis /></el-icon><span>成绩统计</span>
+        </el-menu-item>
         <el-menu-item v-if="store.user?.role === 2" index="/teacher/pending-approvals">
           <el-icon><Finished /></el-icon><span>选课审核</span>
+        </el-menu-item>
+        <el-menu-item v-if="store.user?.role === 2" index="/messages">
+          <el-icon><ChatDotSquare /></el-icon><span>站内信<small v-if="msgUnread > 0" class="msg-badge">{{ msgUnread }}</small></span>
         </el-menu-item>
         <el-menu-item v-if="store.user?.role === 2" index="/teacher/profile">
           <el-icon><User /></el-icon><span>个人设置</span>
@@ -62,7 +74,7 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-badge v-if="store.user?.role === 1" :value="unreadCount" :hidden="unreadCount === 0" class="notif-badge">
+          <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notif-badge">
             <el-button text @click="showNotifPanel = !showNotifPanel">
               <el-icon :size="20"><Bell /></el-icon>
             </el-button>
@@ -99,7 +111,7 @@
       <AssistantChat v-if="store.user?.role === 1 || store.user?.role === 2" />
     </el-container>
 
-    <el-drawer v-model="showNotifPanel" title="课程通知" :size="380" direction="rtl" v-if="store.user?.role === 1" class="notif-drawer">
+    <el-drawer v-model="showNotifPanel" title="课程通知" :size="380" direction="rtl" class="notif-drawer">
       <div v-if="notifications.length === 0" class="notif-empty">暂无通知</div>
       <div v-for="n in notifications" :key="n.id" class="notif-item" :class="{ 'notif-unread': !n.isRead }" @click="markAsRead(n)">
         <div class="notif-title">
@@ -119,7 +131,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import AssistantChat from '../components/AssistantChat.vue'
 import { getNotifications, getUnreadCount, markNotificationRead } from '../api/course'
-import { Plus, Finished, DataAnalysis, Edit, Tickets } from '@element-plus/icons-vue'
+import { getMessageUnreadCount } from '../api/message'
+import { Plus, Finished, DataAnalysis, Edit, Tickets, DataLine, ChatDotSquare } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -128,13 +141,15 @@ const isCollapse = ref(false)
 const showNotifPanel = ref(false)
 const notifications = ref([])
 const unreadCount = ref(0)
+const msgUnread = ref(0)
 
 let notifTimer = null
 
 onMounted(async () => {
-  if (store.user?.role === 1) {
+  await Promise.all([loadMsgUnread()])
+  if (store.user?.role === 1 || store.user?.role === 2) {
     await Promise.all([loadNotifications(), loadUnreadCount()])
-    notifTimer = setInterval(() => { loadNotifications(); loadUnreadCount() }, 30000)
+    notifTimer = setInterval(() => { loadNotifications(); loadUnreadCount(); loadMsgUnread() }, 30000)
   }
 })
 
@@ -146,6 +161,10 @@ async function loadNotifications() {
 
 async function loadUnreadCount() {
   try { unreadCount.value = await getUnreadCount(store.user.id) } catch (_) {}
+}
+
+async function loadMsgUnread() {
+  try { msgUnread.value = await getMessageUnreadCount(store.user.id) } catch (_) {}
 }
 
 async function markAsRead(n) {
@@ -319,6 +338,19 @@ function handleCommand(cmd) {
 }
 
 .notif-badge { margin-right: 4px; }
+
+.msg-badge {
+  display: inline-block;
+  min-width: 16px; height: 16px;
+  line-height: 16px;
+  padding: 0 5px;
+  background: #f56c6c;
+  color: #fff;
+  font-size: 11px;
+  border-radius: 8px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
 
 .notif-drawer :deep(.el-drawer__header) { color: #1e293b; font-weight: 700; }
 

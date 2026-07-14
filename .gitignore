@@ -3,6 +3,9 @@ target/
 *.jar
 *.war
 *.log
+*.err
+log.txt
+seed_data.sql
 .idea/
 *.iml
 .settings/
