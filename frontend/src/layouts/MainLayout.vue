@@ -12,7 +12,7 @@
         <el-menu-item index="/courses">
           <el-icon><Monitor /></el-icon><span>课程广场</span>
         </el-menu-item>
-        <el-menu-item index="/calendar">
+        <el-menu-item v-if="store.user?.role === 1" index="/calendar">
           <el-icon><Calendar /></el-icon><span>课程日程</span>
         </el-menu-item>
         <el-menu-item v-if="store.user?.role === 1" index="/my-courses">
