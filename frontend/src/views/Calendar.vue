@@ -20,7 +20,6 @@ import interactionPlugin from '@fullcalendar/interaction'
 
 const store = useUserStore()
 const router = useRouter()
-const events = ref([])
 
 const TYPE_COLORS = {
   assignment: '#6366f1',
@@ -28,7 +27,7 @@ const TYPE_COLORS = {
   courseExam: '#f59e0b'
 }
 
-const calendarOptions = {
+const calendarOptions = ref({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
   headerToolbar: {
@@ -39,7 +38,7 @@ const calendarOptions = {
   locale: 'zh-cn',
   firstDay: 1,
   height: 'auto',
-  events: events.value,
+  events: [],
   eventClick: (info) => {
     const e = info.event.extendedProps
     if (e.eventType === 'assignment' && e.courseId) {
@@ -53,13 +52,12 @@ const calendarOptions = {
     info.el.style.borderRadius = '4px'
     info.el.style.fontSize = '12px'
     info.el.style.padding = '2px 4px'
-  },
-  loading: (isLoading) => {}
-}
+  }
+})
 
 onMounted(async () => {
   const data = await getCalendarEvents(store.user.id, store.user.role) || []
-  events.value = data.map(e => {
+  calendarOptions.value.events = data.map(e => {
     const colors = TYPE_COLORS[e.eventType] || '#64748b'
     return {
       id: e.eventType + '-' + e.eventId,
@@ -76,6 +74,5 @@ onMounted(async () => {
       }
     }
   })
-  calendarOptions.events = events.value
 })
 </script>
