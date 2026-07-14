@@ -15,6 +15,7 @@ const routes = [
     children: [
       { path: 'courses', name: 'CourseList', component: () => import('../views/student/CourseList.vue'), meta: { title: '课程广场' } },
       { path: 'my-courses', name: 'MyCourses', component: () => import('../views/student/MyCourses.vue'), meta: { title: '我的课程' } },
+      { path: 'my-course', redirect: '/my-courses' },
       { path: 'courses/:id', name: 'CourseDetail', component: () => import('../views/student/CourseDetail.vue'), meta: { title: '课程详情' } },
       { path: 'courses/:cid/assignments/:aid/submit', name: 'SubmitAssignment', component: () => import('../views/student/SubmitAssignment.vue'), meta: { title: '提交作业' } },
       { path: 'my-assignments', name: 'MyAssignments', component: () => import('../views/student/MyAssignments.vue'), meta: { title: '我的作业' } },
@@ -42,7 +43,8 @@ const routes = [
       { path: 'teacher/profile', name: 'TeacherProfile', component: () => import('../views/teacher/TeacherProfile.vue'), meta: { title: '个人设置' } },
       { path: 'admin/users', name: 'UserManage', component: () => import('../views/admin/UserManage.vue'), meta: { title: '用户管理' } },
       { path: 'admin/courses', name: 'AdminCourses', component: () => import('../views/admin/CourseManage.vue'), meta: { title: '课程管理' } },
-      { path: 'admin/dashboard', name: 'Dashboard', component: () => import('../views/admin/Dashboard.vue'), meta: { title: '数据概览' } }
+      { path: 'admin/dashboard', name: 'Dashboard', component: () => import('../views/admin/Dashboard.vue'), meta: { title: '数据概览' } },
+      { path: ':pathMatch(.*)*', redirect: '/courses' }
     ]
   }
 ]

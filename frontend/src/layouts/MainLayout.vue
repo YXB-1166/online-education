@@ -74,7 +74,7 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notif-badge">
+          <el-badge v-if="store.user?.role === 1" :value="unreadCount" :hidden="unreadCount === 0" class="notif-badge">
             <el-button text @click="showNotifPanel = !showNotifPanel">
               <el-icon :size="20"><Bell /></el-icon>
             </el-button>
@@ -111,7 +111,7 @@
       <AssistantChat v-if="store.user?.role === 1 || store.user?.role === 2" />
     </el-container>
 
-    <el-drawer v-model="showNotifPanel" title="课程通知" :size="380" direction="rtl" class="notif-drawer">
+    <el-drawer v-model="showNotifPanel" title="课程通知" :size="380" direction="rtl" v-if="store.user?.role === 1" class="notif-drawer">
       <div v-if="notifications.length === 0" class="notif-empty">暂无通知</div>
       <div v-for="n in notifications" :key="n.id" class="notif-item" :class="{ 'notif-unread': !n.isRead }" @click="markAsRead(n)">
         <div class="notif-title">
@@ -147,9 +147,11 @@ let notifTimer = null
 
 onMounted(async () => {
   await Promise.all([loadMsgUnread()])
-  if (store.user?.role === 1 || store.user?.role === 2) {
+  if (store.user?.role === 1) {
     await Promise.all([loadNotifications(), loadUnreadCount()])
     notifTimer = setInterval(() => { loadNotifications(); loadUnreadCount(); loadMsgUnread() }, 30000)
+  } else if (store.user?.role === 2) {
+    notifTimer = setInterval(() => { loadMsgUnread() }, 30000)
   }
 })
 
