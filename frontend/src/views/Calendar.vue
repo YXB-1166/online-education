@@ -3,13 +3,13 @@
     <div class="page-title">课程日程</div>
 
     <el-card shadow="hover">
-      <FullCalendar :options="calendarOptions" />
+      <FullCalendar ref="calendarRef" :options="calendarOptions" />
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { getCalendarEvents } from '../api/calendar'
@@ -20,6 +20,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 
 const store = useUserStore()
 const router = useRouter()
+const calendarRef = ref(null)
 
 const TYPE_COLORS = {
   assignment: '#6366f1',
@@ -57,9 +58,12 @@ const calendarOptions = ref({
 
 onMounted(async () => {
   const data = await getCalendarEvents(store.user.id, store.user.role) || []
-  calendarOptions.value.events = data.map(e => {
+  await nextTick()
+  const api = calendarRef.value?.getApi()
+  if (!api) return
+  data.forEach(e => {
     const colors = TYPE_COLORS[e.eventType] || '#64748b'
-    return {
+    api.addEvent({
       id: e.eventType + '-' + e.eventId,
       title: '[' + (e.courseName || '') + '] ' + e.title,
       start: e.startTime,
@@ -72,7 +76,7 @@ onMounted(async () => {
         courseId: e.courseId,
         courseName: e.courseName
       }
-    }
+    })
   })
 })
 </script>
