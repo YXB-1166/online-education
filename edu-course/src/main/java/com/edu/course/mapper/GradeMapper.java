@@ -22,7 +22,7 @@ public interface GradeMapper {
             "left join tb_submission s on s.assignment_id = a.id and s.student_id = #{studentId} " +
             "where a.course_id = #{courseId} and s.score is not null " +
             "union all " +
-            "select e.id as itemId, e.title as itemName, 'exam' as itemType, " +
+            "select e.id as itemId, e.title COLLATE utf8mb4_unicode_ci as itemName, 'exam' as itemType, " +
             "er.score, e.total_score as full_score, er.submit_time as score_time, e.end_time as deadline " +
             "from tb_exam e " +
             "left join tb_exam_record er on er.exam_id = e.id and er.student_id = #{studentId} " +
