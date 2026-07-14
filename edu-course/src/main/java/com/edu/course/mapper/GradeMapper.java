@@ -29,4 +29,19 @@ public interface GradeMapper {
             "where e.course_id = #{courseId} and er.score is not null " +
             "order by score_time asc")
     List<Map<String, Object>> selectStudentGradeTrend(@Param("courseId") Long courseId, @Param("studentId") Long studentId);
+
+    @Select("select coalesce(sum(s.score) * 100.0 / nullif(sum(a.full_score), 0), 0) " +
+            "from tb_assignment a " +
+            "join tb_submission s on s.assignment_id = a.id and s.student_id = #{studentId} " +
+            "where a.course_id = #{courseId} and s.score is not null")
+    Double calcHomeworkAvg(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
+
+    @Select("select score from tb_course_selection where course_id = #{courseId} and student_id = #{studentId}")
+    Integer selectFinalScore(@Param("courseId") Long courseId, @Param("studentId") Long studentId);
+
+    @Select("select er.score from tb_exam_record er " +
+            "join tb_exam e on er.exam_id = e.id " +
+            "where e.course_id = #{courseId} and er.student_id = #{studentId} " +
+            "order by er.submit_time desc limit 1")
+    Integer calcExamScore(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 }

@@ -9,6 +9,7 @@ import com.edu.common.result.BusinessException;
 import com.edu.common.service.BaseService;
 import com.edu.course.mapper.CourseMapper;
 import com.edu.course.mapper.CourseSelectionMapper;
+import com.edu.course.mapper.GradeMapper;
 import com.edu.course.mapper.NotificationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class CourseService extends BaseService {
 
     @Autowired
     private NotificationMapper notificationMapper;
+
+    @Autowired
+    private GradeMapper gradeMapper;
 
     public Course findById(Long id) {
         Course course = courseMapper.selectById(id);
@@ -196,12 +200,29 @@ public class CourseService extends BaseService {
         if (!"2".equals(course.getStatus())) throw new BusinessException("只有授课中的课程才能结课");
         int n = courseMapper.endCourse(id);
         if (n == 0) throw new BusinessException("结课失败");
+        calculateFinalScores(course);
         Notification notif = new Notification();
         notif.setCourseId(id);
         notif.setTitle("课程已结课：" + course.getCourseName());
-        notif.setContent("课程《" + course.getCourseName() + "》已结课，成绩将陆续公布。");
+        notif.setContent("课程《" + course.getCourseName() + "》已结课，成绩已公布。");
         notificationMapper.insert(notif);
         log.info("结课成功: id={}", id);
+    }
+
+    private void calculateFinalScores(Course course) {
+        int hr = course.getHomeworkRatio() != null ? course.getHomeworkRatio() : 50;
+        int er = course.getExamRatio() != null ? course.getExamRatio() : 50;
+        List<CourseSelection> selections = selectionMapper.selectActiveByCourse(course.getId());
+        for (CourseSelection cs : selections) {
+            Long sid = cs.getStudentId();
+            Double hwAvg = gradeMapper.calcHomeworkAvg(sid, course.getId());
+            Integer examScore = gradeMapper.calcExamScore(sid, course.getId());
+            int total = 0;
+            if (hwAvg != null) total += Math.round(hwAvg * hr / 100.0);
+            if (examScore != null) total += Math.round(examScore * er / 100.0);
+            selectionMapper.updateScore(sid, course.getId(), total);
+        }
+        log.info("成绩计算完成: courseId={}, studentCount={}", course.getId(), selections.size());
     }
 
     @Transactional

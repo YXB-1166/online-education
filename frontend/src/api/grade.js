@@ -4,6 +4,10 @@ export function getGradeStats(courseId) {
   return request({ url: `/grade/stats/${courseId}`, method: 'get' })
 }
 
+export function getFinalScore(courseId, studentId) {
+  return request({ url: '/grade/final', method: 'get', params: { courseId, studentId } })
+}
+
 export function getGradeTrend(courseId, studentId) {
   return request({ url: '/grade/trend', method: 'get', params: { courseId, studentId } })
 }

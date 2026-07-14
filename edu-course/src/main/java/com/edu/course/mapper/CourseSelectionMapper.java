@@ -62,4 +62,10 @@ public interface CourseSelectionMapper {
             "where c.id = #{courseId} and c.teacher_id = #{teacherId} order by cs.select_time desc")
     List<CourseSelection> selectByCourse(@Param("courseId") Long courseId, @Param("teacherId") Long teacherId);
 
+    @Select("select cs.* from tb_course_selection cs where cs.course_id = #{courseId} and cs.status = '1'")
+    List<CourseSelection> selectActiveByCourse(@Param("courseId") Long courseId);
+
+    @Update("update tb_course_selection set score = #{score} where student_id = #{studentId} and course_id = #{courseId}")
+    int updateScore(@Param("studentId") Long studentId, @Param("courseId") Long courseId, @Param("score") Integer score);
+
 }

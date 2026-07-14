@@ -94,6 +94,7 @@ import { listUsers } from '../../api/user'
 import { listMaterialsWithStatus } from '../../api/material'
 import { listAssignments, listSubmissions } from '../../api/exam'
 import { getMyExamRecords, examPage } from '../../api/exam-online'
+import { getFinalScore } from '../../api/grade'
 import { DataAnalysis, Reading, ChatDotSquare } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -129,6 +130,14 @@ onMounted(async () => {
 async function loadFinalGrade() {
   gradeLoading.value = true
   const c = course.value
+  try {
+    const persisted = await getFinalScore(c.id, store.user.id)
+    if (persisted != null) {
+      finalGrade.value = persisted
+      gradeLoading.value = false
+      return
+    }
+  } catch (_) {}
   try {
     const [assignments, subs, examRecords, examPageRes] = await Promise.all([
       listAssignments({ courseId: c.id }).catch(() => []),

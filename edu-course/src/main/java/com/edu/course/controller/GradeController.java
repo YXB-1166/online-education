@@ -76,6 +76,12 @@ public class GradeController {
         return Result.ok(gradeMapper.selectStudentGradeTrend(courseId, studentId));
     }
 
+    @GetMapping("/final")
+    @RequireRole(1)
+    public Result<Integer> finalScore(@RequestParam Long courseId, @RequestParam Long studentId) {
+        return Result.ok(gradeMapper.selectFinalScore(courseId, studentId));
+    }
+
     @GetMapping("/export/{courseId}")
     @RequireRole(2)
     public ResponseEntity<byte[]> export(@PathVariable Long courseId, @RequestParam String courseName) throws Exception {
