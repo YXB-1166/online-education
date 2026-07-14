@@ -35,9 +35,9 @@
         </div>
         <div class="card-right">
           <div class="assign-status">
-            <el-tag v-if="btnInfo(item).status === 'completed'" type="info" size="small" round>已完成</el-tag>
+            <el-tag v-if="btnInfo(item).status === 'course_ended'" type="info" size="small" round>已结课</el-tag>
             <el-tag v-else-if="btnInfo(item).status === 'expired'" type="danger" size="small" round>未完成</el-tag>
-
+            <el-tag v-else-if="btnInfo(item).status === 'completed'" type="info" size="small" round>已完成</el-tag>
             <el-tag v-else-if="btnInfo(item).status === 'submit'" type="warning" size="small" round>待提交</el-tag>
             <el-tag v-else-if="btnInfo(item).status === 'graded'" type="success" size="small" round>已批改</el-tag>
             <div v-if="submissionMap[item.id]?.score != null" class="assign-score">{{ submissionMap[item.id].score }}分</div>
@@ -86,7 +86,7 @@ function btnInfo(a) {
   const maxCount = a.allowSubmitCount || 1
   const deadlinePassed = a.deadline && new Date(a.deadline) < new Date()
   const courseEnded = courseEndedMap.value[a.courseId]
-  if (courseEnded) return { status: 'expired', submitBtn: '已结课', submitBtnType: 'info', submitDisabled: true }
+  if (courseEnded) return { status: 'course_ended', submitBtn: null, submitBtnType: 'info', submitDisabled: true }
   if (!submitted && deadlinePassed) return { status: 'expired', submitBtn: '未完成', submitBtnType: 'info', submitDisabled: true }
   if (!submitted) return { status: 'submit', submitBtn: '提交', submitBtnType: 'primary', submitDisabled: false }
   if (submitted && sub.score != null) {
@@ -106,7 +106,7 @@ const filteredList = computed(() => {
     if (courseFilter.value && a.courseId !== courseFilter.value) return false
     const info = btnInfo(a)
     if (statusFilter.value === 'completed') {
-      return info.status === 'completed' || info.status === 'graded'
+      return info.status === 'completed' || info.status === 'graded' || info.status === 'course_ended'
     }
     if (statusFilter.value === 'unfinished') {
       return info.status === 'submit' || info.status === 'resubmit'
@@ -116,7 +116,7 @@ const filteredList = computed(() => {
   return items.sort((a, b) => {
     const sa = btnInfo(a).status
     const sb = btnInfo(b).status
-    const order = { submit: 0, resubmit: 1, completed: 2, graded: 3, expired: 4 }
+    const order = { submit: 0, resubmit: 1, completed: 2, graded: 3, course_ended: 4, expired: 5 }
     return (order[sa] || 99) - (order[sb] || 99)
   })
 })
