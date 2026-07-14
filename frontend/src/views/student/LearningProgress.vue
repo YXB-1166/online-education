@@ -22,10 +22,10 @@
 
       <el-row :gutter="20">
         <el-col v-for="p in filteredList" :key="p.courseId" :xs="24" :sm="12" :lg="8" style="margin-bottom:20px">
-          <el-card :class="{ 'risk-card': p.risk && p.selectionStatus !== '3', 'completed-card': p.selectionStatus === '3' }" shadow="hover">
+          <el-card :class="{ 'risk-card': p.risk && p.courseStatus !== '3', 'completed-card': p.courseStatus === '3' }" shadow="hover">
             <div class="card-header">
               <div class="course-identity">
-                <div class="course-avatar" :class="{ 'avatar-completed': p.selectionStatus === '3' }">{{ p.course_name.charAt(0) }}</div>
+                <div class="course-avatar" :class="{ 'avatar-completed': p.courseStatus === '3' }">{{ p.course_name.charAt(0) }}</div>
                 <div>
                   <div class="course-name">{{ p.course_name }}</div>
                   <div class="course-meta">
@@ -34,11 +34,11 @@
                   </div>
                 </div>
               </div>
-              <el-tag v-if="p.selectionStatus === '3'" type="success" effect="dark" size="small">已结课</el-tag>
+              <el-tag v-if="p.courseStatus === '3'" type="success" effect="dark" size="small">已结课</el-tag>
               <el-tag v-else-if="p.risk" type="danger" effect="dark" size="small">⚠️ 挂科风险</el-tag>
             </div>
 
-            <template v-if="p.selectionStatus === '3'">
+            <template v-if="p.courseStatus === '3'">
               <div class="final-score-section">
                 <div class="final-label">最终成绩</div>
                 <div class="final-score" :class="finalScoreClass(p.finalScore)">{{ p.finalScore != null ? p.finalScore : '未出' }}</div>
@@ -124,13 +124,13 @@ const progress = ref([])
 const loading = ref(true)
 const filter = ref('all')
 
-const activeCount = computed(() => progress.value.filter(p => p.selectionStatus !== '3').length)
-const completedCount = computed(() => progress.value.filter(p => p.selectionStatus === '3').length)
+const activeCount = computed(() => progress.value.filter(p => p.courseStatus !== '3').length)
+const completedCount = computed(() => progress.value.filter(p => p.courseStatus === '3').length)
 
 const filteredList = computed(() => {
   if (filter.value === 'all') return progress.value
-  if (filter.value === 'active') return progress.value.filter(p => p.selectionStatus !== '3')
-  if (filter.value === 'completed') return progress.value.filter(p => p.selectionStatus === '3')
+  if (filter.value === 'active') return progress.value.filter(p => p.courseStatus !== '3')
+  if (filter.value === 'completed') return progress.value.filter(p => p.courseStatus === '3')
   return progress.value
 })
 
