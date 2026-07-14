@@ -19,7 +19,7 @@ spring:
         - id: course-service
           uri: lb://edu-course
           predicates:
-            - Path=/course/**,/selection/**,/forum/**,/assistant/**
+            - Path=/course/**,/selection/**,/forum/**,/assistant/**,/grade/**,/message/**
         - id: exam-service
           uri: lb://edu-exam
           predicates:
