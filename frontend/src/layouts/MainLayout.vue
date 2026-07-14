@@ -12,6 +12,9 @@
         <el-menu-item index="/courses">
           <el-icon><Monitor /></el-icon><span>课程广场</span>
         </el-menu-item>
+        <el-menu-item index="/calendar">
+          <el-icon><Calendar /></el-icon><span>课程日程</span>
+        </el-menu-item>
         <el-menu-item v-if="store.user?.role === 1" index="/my-courses">
           <el-icon><Notebook /></el-icon><span>我的课程</span>
         </el-menu-item>
@@ -132,7 +135,7 @@ import { useUserStore } from '../stores/user'
 import AssistantChat from '../components/AssistantChat.vue'
 import { getNotifications, getUnreadCount, markNotificationRead } from '../api/course'
 import { getMessageUnreadCount } from '../api/message'
-import { Plus, Finished, DataAnalysis, Edit, Tickets, DataLine, ChatDotSquare } from '@element-plus/icons-vue'
+import { Plus, Finished, DataAnalysis, Edit, Tickets, DataLine, ChatDotSquare, Calendar } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

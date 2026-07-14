@@ -22,6 +22,7 @@ const routes = [
       { path: 'courses/:id/forum', name: 'Forum', component: () => import('../views/student/Forum.vue'), meta: { title: '课程论坛' } },
       { path: 'my-exams', name: 'ExamList', component: () => import('../views/student/ExamList.vue'), meta: { title: '在线考试' } },
       { path: 'exam/:id', name: 'ExamTake', component: () => import('../views/student/ExamTake.vue'), meta: { title: '在线考试' } },
+      { path: 'calendar', name: 'Calendar', component: () => import('../views/Calendar.vue'), meta: { title: '课程日程' } },
       { path: 'learning-progress', name: 'LearningProgress', component: () => import('../views/student/LearningProgress.vue'), meta: { title: '学习进度' } },
       { path: 'grade-trend', name: 'GradeTrend', component: () => import('../views/student/GradeTrend.vue'), meta: { title: '成绩趋势' } },
       { path: 'messages', name: 'Messages', component: () => import('../views/Messages.vue'), meta: { title: '站内信' } },
